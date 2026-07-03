@@ -2,6 +2,7 @@ const clearButton = document.getElementById("clear");
 const input = document.getElementById("message");
 const chat = document.getElementById("chat");
 const button = document.getElementById("send");
+const micButton = document.getElementById("mic");
 
 async function sendMessage() {
 
@@ -55,7 +56,9 @@ async function sendMessage() {
 
     } catch (error) {
 
-        document.getElementById("typing").remove();
+        if (document.getElementById("typing")) {
+            document.getElementById("typing").remove();
+        }
 
         chat.innerHTML += `
         <div class="ai">
@@ -64,6 +67,7 @@ async function sendMessage() {
         `;
     }
 }
+
 button.addEventListener("click", sendMessage);
 
 input.addEventListener("keydown", function(e) {
@@ -82,4 +86,55 @@ clearButton.addEventListener("click", function() {
     `;
 
     input.value = "";
+
 });
+
+// 🎤 Voice Input
+const SpeechRecognition =
+window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+
+    const recognition = new SpeechRecognition();
+
+    recognition.lang = "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    micButton.addEventListener("click", function() {
+
+        recognition.start();
+        micButton.innerText = "🎙️";
+
+    });
+
+    recognition.onresult = function(event) {
+
+        input.value = event.results[0][0].transcript;
+
+        micButton.innerText = "🎤";
+
+        sendMessage();
+
+    };
+
+    recognition.onerror = function() {
+
+        micButton.innerText = "🎤";
+
+        alert("Voice recognition failed.");
+
+    };
+
+    recognition.onend = function() {
+
+        micButton.innerText = "🎤";
+
+    };
+
+} else {
+
+    micButton.innerText = "❌";
+    micButton.disabled = true;
+
+}
