@@ -14,16 +14,43 @@ export default async function handler(req, res) {
     chatMemory[userId] = [];
   }
 
-  chatMemory[userId].push({
-    role: "user",
-    parts: [
-      {
-        text: req.body.message
-      }
-    ]
+  const userParts = [];
+
+if (req.body.message) {
+  userParts.push({
+    text: req.body.message
+  });
+}
+
+if (req.body.image) {
+
+  userParts.push({
+
+    inlineData: {
+
+      mimeType: "image/jpeg",
+
+      data: req.body.image.replace(
+        /^data:image\/[a-zA-Z]+;base64,/,
+        ""
+      )
+
+    }
+
   });
 
+}
+
+chatMemory[userId].push({
+
+  role: "user",
+
+  parts: userParts
+
+});
+
   try {
+const contents = chatMemory[userId];
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -33,8 +60,12 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          contents: chatMemory[userId]
-        })
+    contents: contents,
+    generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048
+         }
+       })
       }
     );
 

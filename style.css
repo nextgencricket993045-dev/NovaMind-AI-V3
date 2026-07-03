@@ -16,51 +16,112 @@ body{
 
 .container{
     width:100%;
-    max-width:420px;
+    max-width:430px;
     background:#fff;
     border-radius:20px;
     padding:20px;
-    box-shadow:0 10px 30px rgba(0,0,0,.2);
+    box-shadow:0 12px 35px rgba(0,0,0,.25);
 }
 
 h1{
     text-align:center;
     color:#4f46e5;
     margin-bottom:20px;
+    font-size:34px;
 }
 
 .chat{
-    height:350px;
+    height:420px;
     overflow-y:auto;
     border:1px solid #ddd;
-    border-radius:12px;
-    padding:10px;
-    background:#f8f8f8;
+    border-radius:15px;
+    padding:12px;
+    background:#f7f7ff;
     margin-bottom:15px;
+    scroll-behavior:smooth;
+}
+
+.chat::-webkit-scrollbar{
+    width:6px;
+}
+
+.chat::-webkit-scrollbar-thumb{
+    background:#4f46e5;
+    border-radius:20px;
 }
 
 .ai{
     background:#ecebff;
-    padding:10px;
-    border-radius:12px;
-    margin-bottom:10px;
+    padding:12px;
+    border-radius:15px;
+    margin-bottom:12px;
+    width:fit-content;
+    max-width:85%;
+    line-height:1.5;
+    word-wrap:break-word;
 }
 
 .user{
     background:#dbeafe;
-    padding:10px;
-    border-radius:12px;
-    margin-bottom:10px;
+    padding:12px;
+    border-radius:15px;
+    margin-bottom:12px;
+    margin-left:auto;
+    width:fit-content;
+    max-width:85%;
     text-align:right;
+    line-height:1.5;
+    word-wrap:break-word;
 }
 
-input{
+input[type=text]{
     width:100%;
     padding:14px;
     border:1px solid #ccc;
-    border-radius:10px;
+    border-radius:12px;
     font-size:16px;
-    margin-bottom:10px;
+    margin-bottom:12px;
+    outline:none;
+}
+
+input[type=text]:focus{
+    border-color:#4f46e5;
+}
+
+.upload-box{
+    margin-bottom:15px;
+}
+
+#image{
+    display:none;
+}
+
+.upload-label{
+    display:block;
+    width:100%;
+    text-align:center;
+    padding:13px;
+    background:#4f46e5;
+    color:#fff;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:16px;
+    transition:.3s;
+}
+
+.upload-label:hover{
+    background:#4338ca;
+}
+
+#preview{
+    display:none;
+    width:100%;
+    max-height:230px;
+    object-fit:contain;
+    margin-top:12px;
+    border-radius:12px;
+    border:1px solid #ddd;
+    box-shadow:0 4px 12px rgba(0,0,0,.15);
 }
 
 .buttons{
@@ -72,13 +133,19 @@ button{
     flex:1;
     padding:14px;
     border:none;
-    border-radius:10px;
+    border-radius:12px;
     background:#4f46e5;
     color:white;
     font-size:16px;
     cursor:pointer;
+    transition:.3s;
 }
 
 button:hover{
     background:#4338ca;
+    transform:scale(1.03);
+}
+
+button:active{
+    transform:scale(.98);
 }

@@ -1,40 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>NovaMind AI</title>
 
   <link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
 
 <div class="container">
 
-  <h1>🤖 NovaMind AI</h1>
+    <h1>🤖 NovaMind AI</h1>
 
-  <div id="chat" class="chat">
-    <div class="ai">
-      Hello Ayush 👋<br>
-      How can I help you today?
+    <div id="chat" class="chat">
+
+        <div class="ai">
+            Hello Ayush 👋<br>
+            How can I help you today?
+        </div>
+
     </div>
-  </div>
 
-  <input
-    type="text"
-    id="message"
-    placeholder="Type your message...">
+    <!-- Message Box -->
 
-  <div class="buttons">
-    <button id="send">Send</button>
-    <button id="mic">🎤</button>
-    <button id="clear">Clear</button>
-  </div>
+    <input
+        type="text"
+        id="message"
+        placeholder="Type your message...">
+
+    <!-- Image Upload -->
+
+    <div class="upload-box">
+
+        <input
+            type="file"
+            id="image"
+            accept="image/*"
+            hidden>
+
+        <label
+            for="image"
+            class="upload-label">
+
+            📷 Upload Image
+
+        </label>
+
+        <img
+            id="preview"
+            src=""
+            alt="Preview"
+            style="
+            display:none;
+            width:100%;
+            max-height:250px;
+            object-fit:contain;
+            margin-top:10px;
+            border-radius:12px;
+            border:2px solid #ddd;
+            ">
+
+    </div>
+
+    <!-- Buttons -->
+
+    <div class="buttons">
+
+        <button id="send">
+            Send
+        </button>
+
+        <button id="mic">
+            🎤
+        </button>
+
+        <button id="clear">
+            Clear
+        </button>
+
+    </div>
 
 </div>
 
 <script src="script.js"></script>
 
 </body>
+
 </html>
