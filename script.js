@@ -9,7 +9,7 @@ const preview = document.getElementById("preview");
 
 let imageBase64 = "";
 
-// Image Preview
+// Compress Image
 imageInput.addEventListener("change", function () {
 
     const file = this.files[0];
@@ -20,10 +20,37 @@ imageInput.addEventListener("change", function () {
 
     reader.onload = function (e) {
 
-        imageBase64 = e.target.result;
+        const img = new Image();
 
-        preview.src = imageBase64;
-        preview.style.display = "block";
+        img.onload = function () {
+
+            const canvas = document.createElement("canvas");
+
+            let width = img.width;
+            let height = img.height;
+
+            const maxWidth = 1024;
+
+            if (width > maxWidth) {
+                height = Math.round(height * maxWidth / width);
+                width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext("2d");
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            imageBase64 = canvas.toDataURL("image/jpeg", 0.6);
+
+            preview.src = imageBase64;
+            preview.style.display = "block";
+
+        };
+
+        img.src = e.target.result;
 
     };
 
@@ -49,7 +76,8 @@ async function sendMessage() {
 
         chat.innerHTML += `
         <div class="user">
-            <img src="${imageBase64}" style="max-width:200px;border-radius:10px;">
+            <img src="${imageBase64}"
+            style="max-width:220px;border-radius:10px;">
         </div>
         `;
 
@@ -68,8 +96,7 @@ async function sendMessage() {
     chat.appendChild(typing);
 
     chat.scrollTop = chat.scrollHeight;
-
-    try {
+        try {
 
         const response = await fetch("/api/chat", {
 
@@ -91,9 +118,7 @@ async function sendMessage() {
         const data = await response.json();
 
         if (document.getElementById("typing")) {
-
             document.getElementById("typing").remove();
-
         }
 
         chat.innerHTML += `
@@ -108,17 +133,13 @@ async function sendMessage() {
         imageBase64 = "";
 
         preview.src = "";
-
         preview.style.display = "none";
-
         imageInput.value = "";
 
     } catch (error) {
 
         if (document.getElementById("typing")) {
-
             document.getElementById("typing").remove();
-
         }
 
         chat.innerHTML += `
@@ -133,88 +154,80 @@ async function sendMessage() {
 
 button.addEventListener("click", sendMessage);
 
-input.addEventListener("keydown", function (e) {
+input.addEventListener("keydown", function(e){
 
-    if (e.key === "Enter") {
-
+    if(e.key==="Enter"){
         sendMessage();
-
     }
 
 });
 
-clearButton.addEventListener("click", function () {
+clearButton.addEventListener("click", function(){
 
-    chat.innerHTML = `
+    chat.innerHTML=`
     <div class="ai">
-    Hello Ayush 👋<br>
-    How can I help you today?
+        Hello Ayush 👋<br>
+        How can I help you today?
     </div>
     `;
 
-    input.value = "";
+    input.value="";
 
-    imageBase64 = "";
-
-    preview.src = "";
-
-    preview.style.display = "none";
-
-    imageInput.value = "";
+    imageBase64="";
+    preview.src="";
+    preview.style.display="none";
+    imageInput.value="";
 
 });
 
-// Voice Input
+// 🎤 Voice Input
 
 const SpeechRecognition =
 window.SpeechRecognition || window.webkitSpeechRecognition;
 
-if (SpeechRecognition) {
+if(SpeechRecognition){
 
-    const recognition = new SpeechRecognition();
+    const recognition=new SpeechRecognition();
 
-    recognition.lang = "en-IN";
+    recognition.lang="en-IN";
+    recognition.interimResults=false;
+    recognition.maxAlternatives=1;
 
-    recognition.interimResults = false;
-
-    recognition.maxAlternatives = 1;
-
-    micButton.addEventListener("click", function () {
+    micButton.addEventListener("click",function(){
 
         recognition.start();
 
-        micButton.innerText = "🎙️";
+        micButton.innerText="🎙️";
 
     });
 
-    recognition.onresult = function (event) {
+    recognition.onresult=function(event){
 
-        input.value = event.results[0][0].transcript;
+        input.value=event.results[0][0].transcript;
 
-        micButton.innerText = "🎤";
+        micButton.innerText="🎤";
 
         sendMessage();
 
     };
 
-    recognition.onerror = function () {
+    recognition.onerror=function(){
 
-        micButton.innerText = "🎤";
+        micButton.innerText="🎤";
 
         alert("Voice recognition failed.");
 
     };
 
-    recognition.onend = function () {
+    recognition.onend=function(){
 
-        micButton.innerText = "🎤";
+        micButton.innerText="🎤";
 
     };
 
-} else {
+}else{
 
-    micButton.innerText = "❌";
-
-    micButton.disabled = true;
+    micButton.innerText="❌";
+    micButton.disabled=true;
 
 }
