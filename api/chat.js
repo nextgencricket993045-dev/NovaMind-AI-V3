@@ -16,41 +16,32 @@ export default async function handler(req, res) {
 
   const userParts = [];
 
-if (req.body.message) {
-  userParts.push({
-    text: req.body.message
+  if (req.body.message) {
+    userParts.push({
+      text: req.body.message
+    });
+  }
+
+  if (req.body.image) {
+    userParts.push({
+      inlineData: {
+        mimeType: "image/jpeg",
+        data: req.body.image.replace(
+          /^data:image\/[a-zA-Z]+;base64,/,
+          ""
+        )
+      }
+    });
+  }
+
+  chatMemory[userId].push({
+    role: "user",
+    parts: userParts
   });
-}
-
-if (req.body.image) {
-
-  userParts.push({
-
-    inlineData: {
-
-      mimeType: "image/jpeg",
-
-      data: req.body.image.replace(
-        /^data:image\/[a-zA-Z]+;base64,/,
-        ""
-      )
-
-    }
-
-  });
-
-}
-
-chatMemory[userId].push({
-
-  role: "user",
-
-  parts: userParts
-
-});
 
   try {
-const contents = chatMemory[userId];
+
+    const contents = chatMemory[userId];
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -60,20 +51,23 @@ const contents = chatMemory[userId];
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-    contents: contents,
-    generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 2048
-         }
-       })
+          contents: contents,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048
+          }
+        })
       }
     );
 
     const data = await response.json();
 
-    if (data.error) {
-      return res.status(500).json({
-        reply: data.error.message
+    // Debug
+    if (!response.ok) {
+      console.log(data);
+
+      return res.status(response.status).json({
+        reply: JSON.stringify(data, null, 2)
       });
     }
 
@@ -95,6 +89,8 @@ const contents = chatMemory[userId];
     });
 
   } catch (error) {
+
+    console.error(error);
 
     return res.status(500).json({
       reply: error.message
