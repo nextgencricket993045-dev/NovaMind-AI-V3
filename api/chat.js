@@ -1,3 +1,5 @@
+const chatMemory = {};
+
 export default async function handler(req, res) {
 
   if (req.method !== "POST") {
@@ -5,6 +7,21 @@ export default async function handler(req, res) {
       reply: "Method Not Allowed"
     });
   }
+
+  const userId = req.headers["x-forwarded-for"] || "default";
+
+  if (!chatMemory[userId]) {
+    chatMemory[userId] = [];
+  }
+
+  chatMemory[userId].push({
+    role: "user",
+    parts: [
+      {
+        text: req.body.message
+      }
+    ]
+  });
 
   try {
 
@@ -16,15 +33,7 @@ export default async function handler(req, res) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: req.body.message
-                }
-              ]
-            }
-          ]
+          contents: chatMemory[userId]
         })
       }
     );
@@ -37,10 +46,21 @@ export default async function handler(req, res) {
       });
     }
 
+    const aiReply =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "No response from Gemini.";
+
+    chatMemory[userId].push({
+      role: "model",
+      parts: [
+        {
+          text: aiReply
+        }
+      ]
+    });
+
     return res.status(200).json({
-      reply:
-        data.candidates?.[0]?.content?.parts?.[0]?.text ||
-        "No response from Gemini."
+      reply: aiReply
     });
 
   } catch (error) {
