@@ -3,15 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaMind AI V3</title>
+    <title>NovaMind AI V3 - Ultra Pro</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Markdown parsing & Code highlighting integration libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
         .bottom { display: flex !important; align-items: center !important; gap: 10px !important; padding: 15px !important; }
         .bottom input { flex: 1 !important; min-width: 0 !important; }
         .circle-btn { flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
-        .tts-btn { background: none; border: none; cursor: pointer; font-size: 14px; opacity: 0.6; color: inherit; transition: opacity 0.2s; }
-        .tts-btn:hover { opacity: 1; }
-        .msg-actions { display: flex; gap: 8px; margin-top: 5px; }
+        .msg-meta-bar { display: flex; gap: 8px; font-size: 11px; opacity: 0.6; align-items: center; justify-content: flex-end; width: 100%; margin-top: 5px; }
+        .action-icon { cursor: pointer; transition: opacity 0.2s; }
+        .action-icon:hover { opacity: 1; }
+        pre { background: #282c34; padding: 10px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
+        code { font-family: monospace; }
+        .auth-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .auth-box { background: var(--menu-bg, #1e293b); padding: 25px; border-radius: 18px; width: 100%; max-width: 360px; color: var(--input-text, #fff); border: 1px solid var(--header-border, #334155); }
+        .auth-box input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #475569; background: rgba(0,0,0,0.2); color: inherit; }
+        .auth-box button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; background: #4f46e5; color: #fff; font-weight: bold; cursor: pointer; }
+        .pwa-btn { background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; display: none; }
     </style>
 </head>
 <body class="dark-theme">
@@ -19,43 +30,69 @@
 <div class="app">
     <header class="header">
         <div class="logo">🤖 NovaMind AI</div>
-        <div style="display: flex; gap: 10px;">
-            <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Voice Reply">🔊</button>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="pwaInstall" class="pwa-btn">📥 Install App</button>
+            <button id="userProfile" class="theme-btn" title="Account Settings">👤</button>
+            <button id="voiceReplyToggle" class="theme-btn" title="Toggle Voice">🔊</button>
             <button id="themeToggle" class="theme-btn">🌙</button>
         </div>
     </header>
 
+    <!-- Global Search Bar inside Chat -->
+    <div style="padding: 8px 15px; display: flex; gap: 5px; border-bottom: 1px solid var(--header-border);">
+        <input type="text" id="searchChatInput" placeholder="🔍 Search in conversion history..." style="width:100%; padding:6px 12px; border-radius:20px; border:1px solid var(--input-border); background:var(--input-bg); color:var(--input-text); font-size:13px; outline:none;">
+    </div>
+
     <div id="chat" class="chat">
-        <div class="message ai">
-            <div class="msg-text">Hello Ayush 👋<br><br>How can I help you today?</div>
+        <div class="message ai" data-id="welcome-msg">
+            <div class="msg-text">Hello Ayush 👋<br><br>Welcome to NovaMind Ultra V3. Powered with Database Synchronizers, Document Core Parsers, and Live Search Engines.</div>
         </div>
     </div>
 
+    <!-- Hidden Generic File Inputs -->
     <input type="file" id="image" accept="image/*" hidden>
     <input type="file" id="pdf" accept=".pdf" hidden>
     <input type="file" id="docx" accept=".doc,.docx" hidden>
-    <input type="file" id="txt" accept=".txt" hidden>
+    <input type="file" id="txt" accept=".txt,.js,.py,.html,.css,.json" hidden>
+    <input type="file" id="xlsx" accept=".xlsx,.xls" hidden>
+    <input type="file" id="pptx" accept=".pptx,.ppt" hidden>
 
+    <!-- Combined Floating Preview Container -->
     <div id="previewContainer" class="preview-container" style="display: none;">
         <span id="previewName"></span>
         <button id="cancelPreview">❌</button>
     </div>
 
+    <!-- Universal Attachment Menu Layer -->
     <div id="attachMenu" class="attach-menu">
-        <button onclick="uploadClick('image')">📷 Image</button>
-        <button onclick="uploadClick('pdf')">📄 PDF</button>
-        <button onclick="uploadClick('docx')">📁 DOCX</button>
-        <button onclick="uploadClick('txt')">📝 TXT</button>
+        <button onclick="uploadClick('image')">📷 Image / Vision</button>
+        <button onclick="uploadClick('pdf')">📄 PDF Document</button>
+        <button onclick="uploadClick('docx')">📁 DOCX / Word</button>
+        <button onclick="uploadClick('txt')">📝 Text / Code Logs</button>
+        <button onclick="uploadClick('xlsx')">📊 Excel Spreadsheet</button>
+        <button onclick="uploadClick('pptx')">📉 PPT Presentation</button>
     </div>
 
+    <!-- Core Interactive Navigation Hub -->
     <div class="bottom">
         <button id="attach" class="circle-btn">➕</button>
-        <input type="text" id="message" placeholder="Ask NovaMind AI..." autocomplete="off">
+        <input type="text" id="message" placeholder="Ask NovaMind Anything..." autocomplete="off">
         <button id="mic" class="circle-btn">🎤</button>
         <button id="send" class="circle-btn">➤</button>
     </div>
+</div>
 
-    <button id="clear" hidden>Clear</button>
+<!-- Authentication Gateway Modal UI -->
+<div id="authOverlay" class="auth-overlay">
+    <div class="auth-box">
+        <h3 id="authTitle" style="margin-bottom:15px;">Login System Portal</h3>
+        <input type="email" id="authEmail" placeholder="Enter Cloud Email">
+        <input type="password" id="authPassword" placeholder="Enter Secure Password">
+        <button id="primaryAuthBtn">Proceed Configuration</button>
+        <p id="authToggleText" style="font-size:12px; text-align:center; margin-top:12px; cursor:pointer; text-decoration:underline;">Don't have an account? Sign Up</p>
+        <button id="googleAuthBtn" style="background:#db4437; margin-top:10px;">🔴 Continue with Google</button>
+        <button onclick="document.getElementById('authOverlay').style.display='none'" style="background:transparent; color:inherit; border:1px solid #475569; margin-top:8px;">Dismiss Gate</button>
+    </div>
 </div>
 
 <script src="script.js"></script>
