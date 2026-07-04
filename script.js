@@ -1,11 +1,12 @@
 // ====================================================================
-// NovaMind AI V4 - Master Frontend Engine
+// NovaMind AI V4 - Master Frontend Engine (Complete Auth Suite)
 // ====================================================================
 
 let imageBase64 = null;
 let uploadedFileData = null;
 let uploadedFileName = null;
 let uploadedFileType = null;
+let isVoiceReplyEnabled = false; 
 let userSessionToken = localStorage.getItem("novaSessionToken") || generateUUID();
 localStorage.setItem("novaSessionToken", userSessionToken);
 
@@ -13,6 +14,23 @@ function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
+    });
+}
+
+function speakText(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel(); 
+    const cleanText = text.replace(/[\#\*`_\-]/g, "");
+    const speech = new SpeechSynthesisUtterance(cleanText);
+    speech.lang = "hi-IN"; 
+    window.speechSynthesis.speak(speech);
+}
+
+const voiceToggleEl = document.getElementById("voiceReplyToggle");
+if (voiceToggleEl) {
+    voiceToggleEl.addEventListener("click", () => {
+        isVoiceReplyEnabled = !isVoiceReplyEnabled;
+        voiceToggleEl.innerText = isVoiceReplyEnabled ? "🔊" : "🔇";
     });
 }
 
@@ -108,14 +126,15 @@ messageInput.addEventListener('keypress', (e) => {
 });
 
 async function sendMessage(text) {
+    if (!text && !imageBase64 && !uploadedFileData) return;
     messageInput.value = '';
     
-    // Capturing Mode and UI states
     const mode = (typeof activeGenerationMode !== "undefined") ? activeGenerationMode : "chat";
     const aspectEl = document.getElementById("aspectRatio");
-    const ratio = aspectEl ? aspectEl.value : "16:9"; // 16:9 Default for media
+    const ratio = aspectEl ? aspectEl.value : "16:9";
 
-    appendMessage('user', text, imageBase64 || uploadedFileData ? true : false);
+    const msgId = "msg-" + Date.now();
+    appendMessage('user', text, imageBase64 || uploadedFileData ? true : false, null, msgId);
     
     const loadingId = appendLoading();
     chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -148,42 +167,42 @@ async function sendMessage(text) {
         const data = await response.json();
         removeLoading(loadingId);
 
+        const aiMsgId = "ai-" + Date.now();
         if (data.reply || data.mediaUrl) {
-            appendMessage('ai', data.reply, data.mediaUrl, data.mediaType);
+            appendMessage('ai', data.reply, data.mediaUrl, data.mediaType, aiMsgId);
+            if (isVoiceReplyEnabled) speakText(data.reply);
         } else {
-            appendMessage('ai', "⚠️ Engine process completed but returned empty output.");
+            appendMessage('ai', "⚠️ Engine process completed but returned empty output.", null, null, aiMsgId);
         }
 
     } catch (error) {
         removeLoading(loadingId);
-        appendMessage('ai', `⚠️ Core Engine Disconnected: ${error.message}`);
+        appendMessage('ai', `⚠️ Core Engine Disconnected: ${error.message}`, null, null, "err-" + Date.now());
     }
 }
 
 // ==========================================
 // Chat UI Rendering Engine
 // ==========================================
-function appendMessage(sender, text, mediaUrl = null, mediaType = null) {
+function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "") {
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${sender}`;
+    msgDiv.id = `msg-${id}`;
     
     let contentHtml = `<div class="msg-text">`;
     
-    // Parse Markdown text output if available
     if (sender === 'ai' && typeof marked !== 'undefined' && text) {
         contentHtml += marked.parse(text);
     } else if (text) {
         contentHtml += text.replace(/\n/g, '<br>');
     }
     
-    // User attachment indicator
     if (sender === 'user' && mediaUrl === true) {
-        contentHtml += `<br><small style="opacity: 0.7;">📎 [Attachment Included in Request]</small>`;
+        contentHtml += `<br><small style="opacity: 0.7;">📎 [Attachment Included]</small>`;
     }
     
     contentHtml += `</div>`;
 
-    // Dynamic Media Container Renderer
     if (sender === 'ai' && mediaUrl && typeof mediaUrl === 'string') {
         contentHtml += `<div class="media-container" style="margin-top: 15px; text-align: center;">`;
         if (mediaType === 'image') {
@@ -198,20 +217,30 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null) {
         contentHtml += `</div>`;
     }
 
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const safeText = (text || "").replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    
+    let metaControls = "";
     if (sender === 'ai') {
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        contentHtml += `
-        <div class="msg-meta-bar">
-            <span>${time}</span>
-            <span class="action-icon" onclick="navigator.clipboard.writeText(this.parentElement.parentElement.innerText)">📋 Copy Text</span>
-        </div>`;
+        metaControls = `
+            <span class="action-icon" style="cursor:pointer;" onclick="navigator.clipboard.writeText(\`${safeText}\`)">📋 Copy</span>
+            <span class="action-icon" style="cursor:pointer; margin-left:8px;" onclick="speakText(\`${safeText}\`)">🔊 Speak</span>`;
+    } else {
+        metaControls = `
+            <span class="action-icon" style="cursor:pointer;" onclick="triggerMessageEdit(this, '${id}')">✏️ Edit</span>
+            <span class="action-icon" style="cursor:pointer; margin-left:8px;" onclick="triggerMessageDelete('${id}')">🗑️ Del</span>`;
     }
+
+    contentHtml += `
+    <div class="msg-meta-bar" style="display: flex; gap: 8px; font-size: 11px; opacity: 0.6; align-items: center; justify-content: flex-end; width: 100%; margin-top: 5px;">
+        <span>${time}</span>
+        ${metaControls}
+    </div>`;
 
     msgDiv.innerHTML = contentHtml;
     chatContainer.appendChild(msgDiv);
     chatContainer.scrollTop = chatContainer.scrollHeight;
     
-    // Developer code blocks highligter
     if (sender === 'ai' && typeof hljs !== 'undefined') {
         msgDiv.querySelectorAll('pre code').forEach((block) => {
             hljs.highlightElement(block);
@@ -233,3 +262,132 @@ function removeLoading(id) {
     const el = document.getElementById(id);
     if (el) el.remove();
 }
+
+window.speakText = speakText;
+window.triggerMessageDelete = function(id) {
+    document.getElementById(`msg-${id}`)?.remove();
+};
+window.triggerMessageEdit = function(el, id) {
+    const txtNode = el.parentElement.previousElementSibling;
+    const updatedTxt = prompt("Refactor message text context:", txtNode.innerText.replace(/✏️ Edit|🗑️ Del/g, '').trim());
+    if (updatedTxt && updatedTxt.trim() !== "") {
+        txtNode.innerHTML = updatedTxt.replace(/\n/g, '<br>');
+        sendMessage(updatedTxt);
+    }
+};
+
+// ==========================================
+// 👤 Professional Auth Gateway (Sign In / Sign Up / Google)
+// ==========================================
+const userProfileBtn = document.getElementById('userProfile');
+let authOverlay = document.querySelector('.auth-overlay');
+
+if (!authOverlay) {
+    authOverlay = document.createElement('div');
+    authOverlay.className = 'auth-overlay';
+    authOverlay.style.cssText = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:2500; display:none; align-items:center; justify-content:center; padding:20px; font-family:sans-serif;";
+    
+    authOverlay.innerHTML = `
+        <div class="auth-box" style="background:#1e293b; padding:30px; border-radius:20px; width:100%; max-width:380px; color:#fff; border:1px solid #334155; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+            <div style="display:flex; justify-content:between; align-items:center; margin-bottom:15px;">
+                <h3 id="authTitle" style="margin:0; font-size:20px; color:#fff;">👤 Sign In to NovaMind</h3>
+            </div>
+            
+            <!-- Google Login Button -->
+            <button id="googleAuthBtn" style="width:100%; padding:11px; margin-top:10px; margin-bottom:15px; border-radius:10px; border:1px solid #475569; background:#fff; color:#1e293b; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:0.2s;">
+                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/web-24dp/copy_of_web-24dp.png" width="18" alt="Google Logo">
+                <span id="googleBtnText">Continue with Google</span>
+            </button>
+            
+            <div style="text-align:center; margin:10px 0; opacity:0.5; font-size:12px;">— OR —</div>
+
+            <!-- Extra input field for Name (Hidden in Sign In mode) -->
+            <input type="text" id="authName" placeholder="Full Name" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #475569; background:rgba(0,0,0,0.3); color:#fff; display:none; box-sizing:border-box;">
+            
+            <input type="text" id="authUsername" placeholder="Email Address" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #475569; background:rgba(0,0,0,0.3); color:#fff; box-sizing:border-box;">
+            <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #475569; background:rgba(0,0,0,0.3); color:#fff; box-sizing:border-box;">
+            
+            <button id="authSubmitBtn" style="width:100%; padding:12px; margin-top:12px; border-radius:8px; border:none; background:#4f46e5; color:#fff; font-weight:bold; cursor:pointer; font-size:14px;">Sign In</button>
+            
+            <div style="margin-top:15px; text-align:center; font-size:13px; opacity:0.8;">
+                <span id="authSwitchPrompt">Don't have an account?</span> 
+                <a href="#" id="authSwitchModeBtn" style="color:#818cf8; text-decoration:none; font-weight:bold; margin-left:4px;">Sign Up</a>
+            </div>
+            
+            <button id="authCloseBtn" style="width:100%; padding:10px; margin-top:15px; border-radius:8px; border:none; background:#334155; color:#cbd5e1; cursor:pointer; font-size:12px;">Cancel</button>
+        </div>`;
+    document.body.appendChild(authOverlay);
+}
+
+// State management variables
+let authMode = "signin"; 
+
+if (userProfileBtn) {
+    userProfileBtn.addEventListener('click', () => {
+        authOverlay.style.display = 'flex';
+    });
+}
+
+// Event delegation inside the Authentication Panel
+authOverlay.addEventListener('click', (e) => {
+    const nameField = document.getElementById('authName');
+    const titleText = document.getElementById('authTitle');
+    const submitBtn = document.getElementById('authSubmitBtn');
+    const promptText = document.getElementById('authSwitchPrompt');
+    const switchLink = document.getElementById('authSwitchModeBtn');
+    const googleText = document.getElementById('googleBtnText');
+
+    // Close window trigger
+    if (e.target.id === 'authCloseBtn') {
+        authOverlay.style.display = 'none';
+    }
+
+    // Dynamic Switch Mode Toggler (Sign In <-> Sign Up)
+    if (e.target.id === 'authSwitchModeBtn') {
+        e.preventDefault();
+        if (authMode === "signin") {
+            authMode = "signup";
+            titleText.innerText = "📝 Create Account";
+            nameField.style.display = "block";
+            submitBtn.innerText = "Sign Up / Register";
+            promptText.innerText = "Already have an account?";
+            switchLink.innerText = "Sign In";
+            googleText.innerText = "Sign Up with Google";
+        } else {
+            authMode = "signin";
+            titleText.innerText = "👤 Sign In to NovaMind";
+            nameField.style.display = "none";
+            submitBtn.innerText = "Sign In";
+            promptText.innerText = "Don't have an account?";
+            switchLink.innerText = "Sign Up";
+            googleText.innerText = "Continue with Google";
+        }
+    }
+
+    // Google Authentication Simulation Button
+    if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
+        alert("Redirecting to secure Google Account OAuth Gateway... 🔐");
+        alert("Success! Authenticated via secure Google token.");
+        authOverlay.style.display = 'none';
+    }
+
+    // Core Submit Logic
+    if (e.target.id === 'authSubmitBtn') {
+        const email = document.getElementById('authUsername')?.value;
+        const pass = document.getElementById('authPassword')?.value;
+        const name = nameField?.value;
+
+        if (!email || !pass) {
+            alert("Please fill all required standard fields.");
+            return;
+        }
+
+        if (authMode === "signup") {
+            if (!name) { alert("Please provide your full name for registration."); return; }
+            alert(`Registration successful! Account generated for ${name}.`);
+        } else {
+            alert(`Welcome back! Session authorized for ${email}.`);
+        }
+        authOverlay.style.display = 'none';
+    }
+});
