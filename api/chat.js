@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V3 - Multi-Engine Real Animation & Image Backend
+// NovaMind AI V3 - Multi-Engine Real Animation & Image Backend (FINAL)
 // ====================================================================
 
 const chatMemory = {};
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     const structuralInstructions = [
         {
             role: "user",
-            parts: [{ text: `You are NovaMind AI Ultra Enterprise operating in 2026. Always keep replies short and in English/Hindi mix.` }]
+            parts: [{ text: `You are NovaMind AI Ultra Enterprise operating in 2026. Always keep replies short and in English/Hindi mix. Never output raw technical tables or long paragraphs in French.` }]
         },
         ...chatMemory[clientInstanceToken],
         { role: "user", parts: payloadParts }
@@ -79,42 +79,4 @@ export default async function handler(req, res) {
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: structuralInstructions, generationConfig: { temperature: 0.4, maxOutputTokens: 500 } })
-            }
-        );
-
-        const internalJson = await cloudGatewayResponse.json();
-        let modelOutputText = internalJson.candidates?.[0]?.content?.parts?.[0]?.text || "Processing complete.";
-
-        let finalMediaUrl = null;
-        let finalMediaType = null;
-
-        const cleanPrompt = encodeURIComponent(originalUserMessage.replace(/[^a-zA-Z0-9 ]/g, "").trim());
-        const randomSeed = Math.floor(Math.random() * 1000000);
-
-        // REAL-TIME IMAGE GENERATION ENGINE
-        if (currentMode === "image") {
-            finalMediaType = "image";
-            finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=1024&height=1024&seed=${randomSeed}&enhance=true`;
-        } 
-        // REAL-TIME VIDEO ANIMATION GENERATION ENGINE (GIF Loop Stream)
-        else if (currentMode === "video") {
-            finalMediaType = "image"; // Set to image so frontend renders the dynamic GIF container smoothly
-            finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=800&height=450&seed=${randomSeed}&feed=true`; // 'feed=true' activates dynamic frame interpolation
-        }
-
-        if (requestBody.message && requestBody.message.trim() !== "") {
-            chatMemory[clientInstanceToken].push({ role: "user", parts: [{ text: requestBody.message }] });
-        }
-        chatMemory[clientInstanceToken].push({ role: "model", parts: [{ text: modelOutputText }] });
-
-        return res.status(200).json({ 
-            reply: modelOutputText, 
-            mediaUrl: finalMediaUrl, 
-            mediaType: finalMediaType 
-        });
-
-    } catch (crashErr) {
-        return res.status(500).json({ reply: "Engine Core Error." });
-    }
-}
+                body: JSON.
