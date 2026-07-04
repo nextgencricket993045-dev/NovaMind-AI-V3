@@ -1,95 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>NovaMind AI</title>
-
-  <link rel="stylesheet" href="style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaMind AI V3</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS BYPASS: Buttons ko gayab hone se rokne ke liye strict rules */
+        .bottom {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 15px !important;
+        }
+        .bottom input {
+            flex: 1 !important;
+            min-width: 0 !important; /* Input box ko failne se rokega */
+        }
+        .circle-btn {
+            flex-shrink: 0 !important; /* Buttons ko squeeze hone se rokega */
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+    </style>
 </head>
+<body class="dark-theme">
 
-<body>
-
-<div class="container">
-
-    <h1>🤖 NovaMind AI</h1>
+<div class="app">
+    <header class="header">
+        <div class="logo">🤖 NovaMind AI</div>
+        <button id="themeToggle" class="theme-btn">🌙</button>
+    </header>
 
     <div id="chat" class="chat">
-
-        <div class="ai">
-            Hello Ayush 👋<br>
-            How can I help you today?
+        <div class="message ai">
+            <div class="msg-text">Hello Ayush 👋<br><br>How can I help you today?</div>
         </div>
-
     </div>
 
-    <!-- Message Box -->
+    <input type="file" id="image" accept="image/*" hidden>
+    <input type="file" id="pdf" accept=".pdf" hidden>
+    <input type="file" id="docx" accept=".doc,.docx" hidden>
+    <input type="file" id="txt" accept=".txt" hidden>
 
-    <input
-        type="text"
-        id="message"
-        placeholder="Type your message...">
-
-    <!-- Image Upload -->
-
-    <div class="upload-box">
-
-        <input
-            type="file"
-            id="image"
-            accept="image/*"
-            hidden>
-
-        <label
-            for="image"
-            class="upload-label">
-
-            📷 Upload Image
-
-        </label>
-
-        <img
-            id="preview"
-            src=""
-            alt="Preview"
-            style="
-            display:none;
-            width:100%;
-            max-height:250px;
-            object-fit:contain;
-            margin-top:10px;
-            border-radius:12px;
-            border:2px solid #ddd;
-            ">
-
+    <div id="previewContainer" class="preview-container" style="display: none;">
+        <span id="previewName"></span>
+        <button id="cancelPreview">❌</button>
     </div>
 
-    <!-- Buttons -->
-
-    <div class="buttons">
-
-        <button id="send">
-            Send
-        </button>
-
-        <button id="mic">
-            🎤
-        </button>
-
-        <button id="clear">
-            Clear
-        </button>
-
+    <div id="attachMenu" class="attach-menu">
+        <button onclick="uploadClick('image')">📷 Image</button>
+        <button onclick="uploadClick('pdf')">📄 PDF</button>
+        <button onclick="uploadClick('docx')">📁 DOCX</button>
+        <button onclick="uploadClick('txt')">📝 TXT</button>
     </div>
 
+    <div class="bottom">
+        <button id="attach" class="circle-btn">➕</button>
+        <input type="text" id="message" placeholder="Ask NovaMind AI..." autocomplete="off">
+        <button id="mic" class="circle-btn">🎤</button>
+        <button id="send" class="circle-btn">➤</button>
+    </div>
+
+    <button id="clear" hidden>Clear</button>
 </div>
 
 <script src="script.js"></script>
 
+<script>
+    // External Script agar crash bhi ho jaye, toh ye helper functions chalte rahenge
+    function uploadClick(id) {
+        document.getElementById(id).click();
+        document.getElementById('attachMenu').classList.remove('active');
+    }
+</script>
 </body>
-
 </html>

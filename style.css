@@ -1,176 +1,286 @@
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial,sans-serif;
+/* ==========================================
+   NovaMind AI V3 - Premium Styles (Theme Support)
+========================================== */
+
+:root {
+    /* Light Mode Variables */
+    --bg-gradient: linear-gradient(135deg, #4f46e5, #7c3aed);
+    --app-bg: #ffffff;
+    --header-border: #eee;
+    --logo-color: #4f46e5;
+    --chat-bg: #fafafa;
+    --ai-msg-bg: #ecebff;
+    --ai-msg-text: #111111;
+    --user-msg-bg: #dbeafe;
+    --user-msg-text: #111111;
+    --meta-color: #777777;
+    --input-bg: #ffffff;
+    --input-border: #dddddd;
+    --input-text: #111111;
+    --menu-bg: #ffffff;
+    --btn-hover: #4338ca;
 }
 
-body{
-    background:linear-gradient(135deg,#4f46e5,#7c3aed);
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    padding:20px;
+.dark-theme {
+    /* Dark Mode Variables */
+    --bg-gradient: linear-gradient(135deg, #0f172a, #1e1b4b);
+    --app-bg: #1e293b;
+    --header-border: #334155;
+    --logo-color: #818cf8;
+    --chat-bg: #0f172a;
+    --ai-msg-bg: #334155;
+    --ai-msg-text: #f8fafc;
+    --user-msg-bg: #4f46e5;
+    --user-msg-text: #ffffff;
+    --meta-color: #94a3b8;
+    --input-bg: #1e293b;
+    --input-border: #475569;
+    --input-text: #ffffff;
+    --menu-bg: #334155;
+    --btn-hover: #6366f1;
 }
 
-.container{
-    width:100%;
-    max-width:430px;
-    background:#fff;
-    border-radius:20px;
-    padding:20px;
-    box-shadow:0 12px 35px rgba(0,0,0,.25);
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
 }
 
-h1{
-    text-align:center;
-    color:#4f46e5;
-    margin-bottom:20px;
-    font-size:34px;
+body {
+    background: var(--bg-gradient);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    transition: background 0.3s ease;
 }
 
-.chat{
-    height:420px;
-    overflow-y:auto;
-    border:1px solid #ddd;
-    border-radius:15px;
-    padding:12px;
-    background:#f7f7ff;
-    margin-bottom:15px;
-    scroll-behavior:smooth;
+.app {
+    width: 100%;
+    max-width: 430px;
+    height: 95vh;
+    background: var(--app-bg);
+    border-radius: 22px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, .25);
+    position: relative;
+    transition: background 0.3s ease;
 }
 
-.chat::-webkit-scrollbar{
-    width:6px;
+/* ==========================================
+   Header & Controls
+========================================== */
+.header {
+    padding: 15px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--header-border);
 }
 
-.chat::-webkit-scrollbar-thumb{
-    background:#4f46e5;
-    border-radius:20px;
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--logo-color);
 }
 
-.ai{
-    background:#ecebff;
-    padding:12px;
-    border-radius:15px;
-    margin-bottom:12px;
-    width:fit-content;
-    max-width:85%;
-    line-height:1.5;
-    word-wrap:break-word;
+.theme-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
 }
 
-.user{
-    background:#dbeafe;
-    padding:12px;
-    border-radius:15px;
-    margin-bottom:12px;
-    margin-left:auto;
-    width:fit-content;
-    max-width:85%;
-    text-align:right;
-    line-height:1.5;
-    word-wrap:break-word;
+/* ==========================================
+   Chat & Messages Area
+========================================== */
+.chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+    background: var(--chat-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-input[type=text]{
-    width:100%;
-    padding:14px;
-    border:1px solid #ccc;
-    border-radius:12px;
-    font-size:16px;
-    margin-bottom:12px;
-    outline:none;
+.message {
+    padding: 12px 14px;
+    border-radius: 18px;
+    max-width: 85%;
+    line-height: 1.5;
+    word-break: break-word;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: relative;
 }
 
-input[type=text]:focus{
-    border-color:#4f46e5;
+.ai {
+    background: var(--ai-msg-bg);
+    color: var(--ai-msg-text);
+    align-self: flex-start;
+    border-radius: 18px 18px 18px 4px;
 }
 
-.upload-box{
-    margin-bottom:15px;
+.user {
+    background: var(--user-msg-bg);
+    color: var(--user-msg-text);
+    align-self: flex-end;
+    border-radius: 18px 18px 4px 18px;
 }
 
-#image{
-    display:none;
+/* Message Time & Copy Button Layout */
+.msg-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--meta-color);
+    margin-top: 2px;
 }
 
-.upload-label{
-    display:block;
-    width:100%;
-    text-align:center;
-    padding:13px;
-    background:#4f46e5;
-    color:#fff;
-    border-radius:12px;
-    cursor:pointer;
-    font-size:16px;
-    transition:.3s;
+.copy-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    color: inherit;
 }
 
-.upload-label:hover{
-    background:#4338ca;
+.copy-btn:hover {
+    opacity: 1;
 }
 
-#preview{
-    display:none;
-    width:100%;
-    max-height:230px;
-    object-fit:contain;
-    margin-top:12px;
-    border-radius:12px;
-    border:1px solid #ddd;
-    box-shadow:0 4px 12px rgba(0,0,0,.15);
+/* ==========================================
+   Preview Container
+========================================== */
+.preview-container {
+    background: var(--menu-bg);
+    padding: 10px 15px;
+    border-top: 1px solid var(--header-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--input-text);
+    font-size: 14px;
 }
 
-.buttons{
-    display:flex;
-    gap:10px;
+.preview-container button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
 }
 
-button{
-    flex:1;
-    padding:14px;
-    border:none;
-    border-radius:12px;
-    background:#4f46e5;
-    color:white;
-    font-size:16px;
-    cursor:pointer;
-    transition:.3s;
+/* ==========================================
+   Bottom Input Bar
+========================================== */
+.bottom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    border-top: 1px solid var(--header-border);
+    background: var(--app-bg);
 }
 
-button:hover{
-    background:#4338ca;
-    transform:scale(1.03);
+.bottom input {
+    flex: 1;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--input-text);
+    border-radius: 30px;
+    padding: 14px 18px;
+    font-size: 16px;
+    outline: none;
 }
 
-button:active{
-    transform:scale(.98);
-}
-/* Message Time */
-
-.time{
-    display:block;
-    margin-top:6px;
-    font-size:11px;
-    color:#666;
+.bottom input:focus {
+    border-color: var(--logo-color);
 }
 
-/* Copy Button */
-
-.copy-btn{
-    margin-top:8px;
-    padding:6px 10px;
-    border:none;
-    border-radius:8px;
-    background:#4f46e5;
-    color:#fff;
-    font-size:12px;
-    cursor:pointer;
+.circle-btn {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 50%;
+    background: var(--logo-color);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .2s;
+    flex-shrink: 0;
 }
 
-.copy-btn:hover{
-    background:#4338ca;
+.circle-btn:hover {
+    background: var(--btn-hover);
+    transform: scale(1.05);
+}
+
+/* ==========================================
+   Attachment Menu (Floating Inside App)
+========================================== */
+.attach-menu {
+    position: absolute;
+    bottom: 85px;
+    left: 15px;
+    background: var(--menu-bg);
+    border-radius: 14px;
+    box-shadow: 0 8px 25px rgba(0,0,0,.3);
+    padding: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 1000;
+    width: 140px;
+    border: 1px solid var(--header-border);
+}
+
+.attach-menu.active {
+    display: flex;
+}
+
+.attach-menu button {
+    border: none;
+    background: none;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 15px;
+    cursor: pointer;
+    color: var(--input-text);
+    transition: background 0.2s;
+}
+
+.attach-menu button:hover {
+    background: var(--ai-msg-bg);
+}
+
+/* ==========================================
+   Scrollbar & Responsive
+========================================== */
+.chat::-webkit-scrollbar {
+    width: 4px;
+}
+
+.chat::-webkit-scrollbar-thumb {
+    background: var(--header-border);
+    border-radius: 20px;
+}
+
+@media(max-width: 500px) {
+    body { padding: 0; }
+    .app { width: 100%; height: 100vh; border-radius: 0; }
 }
