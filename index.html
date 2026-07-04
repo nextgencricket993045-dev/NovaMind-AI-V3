@@ -6,23 +6,12 @@
     <title>NovaMind AI V3</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* CSS BYPASS: Buttons ko gayab hone se rokne ke liye strict rules */
-        .bottom {
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            padding: 15px !important;
-        }
-        .bottom input {
-            flex: 1 !important;
-            min-width: 0 !important; /* Input box ko failne se rokega */
-        }
-        .circle-btn {
-            flex-shrink: 0 !important; /* Buttons ko squeeze hone se rokega */
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
+        .bottom { display: flex !important; align-items: center !important; gap: 10px !important; padding: 15px !important; }
+        .bottom input { flex: 1 !important; min-width: 0 !important; }
+        .circle-btn { flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+        .tts-btn { background: none; border: none; cursor: pointer; font-size: 14px; opacity: 0.6; color: inherit; transition: opacity 0.2s; }
+        .tts-btn:hover { opacity: 1; }
+        .msg-actions { display: flex; gap: 8px; margin-top: 5px; }
     </style>
 </head>
 <body class="dark-theme">
@@ -30,7 +19,10 @@
 <div class="app">
     <header class="header">
         <div class="logo">🤖 NovaMind AI</div>
-        <button id="themeToggle" class="theme-btn">🌙</button>
+        <div style="display: flex; gap: 10px;">
+            <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Voice Reply">🔊</button>
+            <button id="themeToggle" class="theme-btn">🌙</button>
+        </div>
     </header>
 
     <div id="chat" class="chat">
@@ -67,9 +59,7 @@
 </div>
 
 <script src="script.js"></script>
-
 <script>
-    // External Script agar crash bhi ho jaye, toh ye helper functions chalte rahenge
     function uploadClick(id) {
         document.getElementById(id).click();
         document.getElementById('attachMenu').classList.remove('active');

@@ -1,17 +1,12 @@
-// ==========================================
-// NovaMind AI V3 - Core Script (Fixed)
-// ==========================================
-
 const attachBtn = document.getElementById("attach");
 const attachMenu = document.getElementById("attachMenu");
-const clearButton = document.getElementById("clear");
 const input = document.getElementById("message");
 const chat = document.getElementById("chat");
-const button = document.getElementById("send"); // Fixed naming to 'button'
+const button = document.getElementById("send");
 const micButton = document.getElementById("mic");
 const themeToggle = document.getElementById("themeToggle");
+const voiceReplyToggle = document.getElementById("voiceReplyToggle");
 
-// File Inputs & Preview Elements
 const imageInput = document.getElementById("image");
 const pdfInput = document.getElementById("pdf");
 const docxInput = document.getElementById("docx");
@@ -20,179 +15,100 @@ const previewContainer = document.getElementById("previewContainer");
 const previewName = document.getElementById("previewName");
 const cancelPreview = document.getElementById("cancelPreview");
 
-// Global Variables to Store File Data
 let imageBase64 = "";
 let uploadedFileData = ""; 
 let uploadedFileName = "";
 let uploadedFileType = ""; 
+let isVoiceReplyEnabled = true;
+let lastUserMessage = ""; // For regenerate function
 
-// Helper function to get current time formatted
 function getCurrentTime() {
     const now = new Date();
     let hours = now.getHours();
     let minutes = now.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; 
+    hours = hours % 12 || 12;
     minutes = minutes < 10 ? '0' + minutes : minutes;
     return `${hours}:${minutes} ${ampm}`;
 }
 
-// Helper function to escape text for HTML attributes
 function escapeHtml(text) {
     return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-// ==========================================
-// Theme Toggle (Dark / Light Mode)
-// ==========================================
-themeToggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark-theme");
-    if (document.body.classList.contains("dark-theme")) {
-        themeToggle.innerText = "🌙";
-    } else {
-        themeToggle.innerText = "☀️";
-    }
-});
-
-// ==========================================
-// File Input Handling (Image, TXT, PDF, DOCX)
-// ==========================================
-
-// 1. Image Compressor & Preview
-imageInput.addEventListener("change", function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    uploadedFileName = file.name;
-    uploadedFileType = "image";
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const img = new Image();
-        img.onload = function () {
-            const canvas = document.createElement("canvas");
-            let width = img.width;
-            let height = img.height;
-            const maxWidth = 1024;
-
-            if (width > maxWidth) {
-                height = Math.round(height * maxWidth / width);
-                width = maxWidth;
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, width, height);
-
-            imageBase64 = canvas.toDataURL("image/jpeg", 0.6);
-            
-            previewName.innerText = `📷 Image: ${file.name}`;
-            previewContainer.style.display = "flex";
-        };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-    attachMenu.classList.remove("active");
-});
-
-// 2. TXT File Reader
-txtInput.addEventListener("change", function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    uploadedFileName = file.name;
-    uploadedFileType = "txt";
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        uploadedFileData = e.target.result; 
-        previewName.innerText = `📝 TXT: ${file.name}`;
-        previewContainer.style.display = "flex";
-    };
-    reader.readAsText(file);
-    attachMenu.classList.remove("active");
-});
-
-// 3. PDF File Handler
-pdfInput.addEventListener("change", function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    uploadedFileName = file.name;
-    uploadedFileType = "pdf";
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        uploadedFileData = e.target.result; 
-        previewName.innerText = `📄 PDF: ${file.name}`;
-        previewContainer.style.display = "flex";
-    };
-    reader.readAsDataURL(file);
-    attachMenu.classList.remove("active");
-});
-
-// 4. DOCX File Handler
-docxInput.addEventListener("change", function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    uploadedFileName = file.name;
-    uploadedFileType = "docx";
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        uploadedFileData = e.target.result; 
-        previewName.innerText = `📁 DOCX: ${file.name}`;
-        previewContainer.style.display = "flex";
-    };
-    reader.readAsDataURL(file);
-    attachMenu.classList.remove("active");
-});
-
-// Cancel Preview Button
-cancelPreview.addEventListener("click", () => {
-    resetAttachments();
-});
-
-function resetAttachments() {
-    imageBase64 = "";
-    uploadedFileData = "";
-    uploadedFileName = "";
-    uploadedFileType = "";
-    previewName.innerText = "";
-    previewContainer.style.display = "none";
-    imageInput.value = "";
-    pdfInput.value = "";
-    docxInput.value = "";
-    txtInput.value = "";
+// Speak AI text out loud (AI Voice Reply)
+function speakText(text) {
+    if (!isVoiceReplyEnabled) return;
+    window.speechSynthesis.cancel(); // Stop any previous speech
+    const speech = new SpeechSynthesisUtterance(text.replace(/[\#\*`_-]/g, "")); // Clean markdown symbols
+    speech.lang = "hi-IN"; // Supports both Hindi and English context smoothly
+    window.speechSynthesis.speak(speech);
 }
 
-// ==========================================
-// Messaging Logic
-// ==========================================
-async function sendMessage() {
-    const text = input.value.trim();
+voiceReplyToggle.addEventListener("click", () => {
+    isVoiceReplyEnabled = !isVoiceReplyEnabled;
+    voiceReplyToggle.innerText = isVoiceReplyEnabled ? "🔊" : "🔇";
+});
 
+themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark-theme");
+    themeToggle.innerText = document.body.classList.contains("dark-theme") ? "🌙" : "☀️";
+});
+
+// File Loading Logic
+function handleFileSelect(file, type, readAs) {
+    if (!file) return;
+    uploadedFileName = file.name;
+    uploadedFileType = type;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        uploadedFileData = e.target.result;
+        previewName.innerText = `${type.toUpperCase()}: ${file.name}`;
+        previewContainer.style.display = "flex";
+    };
+    if (readAs === "text") reader.readAsText(file);
+    else reader.readAsDataURL(file);
+}
+
+imageInput.addEventListener("change", function() {
+    const file = this.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        imageBase64 = e.target.result;
+        previewName.innerText = `📷 Image: ${file.name}`;
+        previewContainer.style.display = "flex";
+    };
+    reader.readAsDataURL(file);
+});
+
+txtInput.addEventListener("change", function() { handleFileSelect(this.files[0], "txt", "text"); });
+pdfInput.addEventListener("change", function() { handleFileSelect(this.files[0], "pdf", "dataurl"); });
+docxInput.addEventListener("change", function() { handleFileSelect(this.files[0], "docx", "dataurl"); });
+
+cancelPreview.addEventListener("click", resetAttachments);
+
+function resetAttachments() {
+    imageBase64 = ""; uploadedFileData = ""; uploadedFileName = ""; uploadedFileType = "";
+    previewName.innerText = ""; previewContainer.style.display = "none";
+    imageInput.value = ""; pdfInput.value = ""; docxInput.value = ""; txtInput.value = "";
+}
+
+async function sendMessage(overrideText = null) {
+    const text = overrideText !== null ? overrideText : input.value.trim();
     if (text === "" && imageBase64 === "" && uploadedFileData === "") return;
 
+    if (overrideText === null) lastUserMessage = text;
     const timeStamp = getCurrentTime();
 
     if (text !== "") {
         chat.innerHTML += `
         <div class="message user">
             <div class="msg-text">${text}</div>
-            <div class="msg-meta"><span class="time">${timeStamp}</span></div>
-        </div>`;
-    }
-
-    if (uploadedFileName !== "") {
-        let icon = uploadedFileType === "image" ? "📷" : "📄";
-        chat.innerHTML += `
-        <div class="message user">
-            <div class="msg-text">${icon} ${uploadedFileName}</div>
-            <div class="msg-meta"><span class="time">${timeStamp}</span></div>
+            <div class="msg-meta">
+                <span class="time">${timeStamp}</span>
+                <span style="cursor:pointer; opacity:0.6;" onclick="editMessage(this)">✏️</span>
+            </div>
         </div>`;
     }
 
@@ -203,7 +119,7 @@ async function sendMessage() {
     const typing = document.createElement("div");
     typing.className = "message ai";
     typing.id = "typing";
-    typing.innerHTML = `<div class="msg-text">⚡ NovaMind AI is thinking...</div>`;
+    typing.innerHTML = `<div class="msg-text">⚡ NovaMind AI is thinking (Web Search Active)...</div>`;
     chat.appendChild(typing);
     chat.scrollTop = chat.scrollHeight;
 
@@ -221,10 +137,7 @@ async function sendMessage() {
         });
 
         const data = await response.json();
-
-        if (document.getElementById("typing")) {
-            document.getElementById("typing").remove();
-        }
+        if (document.getElementById("typing")) document.getElementById("typing").remove();
 
         const aiTime = getCurrentTime();
         const escapedReply = escapeHtml(data.reply || "");
@@ -235,78 +148,50 @@ async function sendMessage() {
             <div class="msg-meta">
                 <span class="time">${aiTime}</span>
                 <button class="copy-btn" onclick="navigator.clipboard.writeText('${escapedReply}')">📋</button>
+                <button class="tts-btn" onclick="speakText('${escapedReply}')">🔊</button>
+                <span style="cursor:pointer; font-size:12px; margin-left:5px;" onclick="regenerateResponse()">🔄</span>
             </div>
         </div>`;
 
         chat.scrollTop = chat.scrollHeight;
+        speakText(data.reply);
         resetAttachments();
 
     } catch (error) {
-        if (document.getElementById("typing")) {
-            document.getElementById("typing").remove();
-        }
-        chat.innerHTML += `
-        <div class="message ai">
-            <div class="msg-text">❌ Error connecting to AI. Please try again.</div>
-        </div>`;
-        chat.scrollTop = chat.scrollHeight;
+        if (document.getElementById("typing")) document.getElementById("typing").remove();
+        chat.innerHTML += `<div class="message ai"><div class="msg-text">❌ Connection Error.</div></div>`;
     }
 }
 
-// Event Listeners for Actions
-button.addEventListener("click", sendMessage);
-input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendMessage();
-});
-
-// Clear Chat Functionality
-if (clearButton) {
-    clearButton.addEventListener("click", () => {
-        chat.innerHTML = `
-        <div class="message ai">
-            <div class="msg-text">Hello Ayush 👋<br><br>How can I help you today?</div>
-        </div>`;
-        resetAttachments();
-    });
+function editMessage(element) {
+    const oldText = element.parentElement.previousElementSibling.innerText;
+    const newText = prompt("Edit your message:", oldText);
+    if (newText !== null && newText.trim() !== "") {
+        sendMessage(newText.trim());
+    }
 }
 
-// ==========================================
-// Voice Input Features
-// ==========================================
+function regenerateResponse() {
+    if (lastUserMessage !== "") {
+        sendMessage(lastUserMessage);
+    }
+}
+
+button.addEventListener("click", () => sendMessage());
+input.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
+
+// Voice Input Configuration
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition) {
     const recognition = new SpeechRecognition();
     recognition.lang = "en-IN";
-    recognition.interimResults = false;
-
-    micButton.addEventListener("click", () => {
-        recognition.start();
-        micButton.innerText = "🎙️";
-    });
-
-    recognition.onresult = function (event) {
-        input.value = event.results[0][0].transcript;
-        micButton.innerText = "🎤";
-        sendMessage();
-    };
-
-    recognition.onerror = () => { micButton.innerText = "🎤"; };
-    recognition.onend = () => { micButton.innerText = "🎤"; };
+    micButton.addEventListener("click", () => { recognition.start(); micButton.innerText = "🎙️"; });
+    recognition.onresult = (e) => { input.value = e.results[0][0].transcript; micButton.innerText = "🎤"; sendMessage(); };
+    recognition.onerror = () => micButton.innerText = "🎤";
+    recognition.onend = () => micButton.innerText = "🎤";
 } else {
-    micButton.innerText = "❌";
-    micButton.disabled = true;
+    micButton.innerText = "❌"; micButton.disabled = true;
 }
 
-// ==========================================
-// UI - Attachment Menu Overlay
-// ==========================================
-attachBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    attachMenu.classList.toggle("active");
-});
-
-document.addEventListener("click", (e) => {
-    if (!attachMenu.contains(e.target) && !attachBtn.contains(e.target)) {
-        attachMenu.classList.remove("active");
-    }
-});
+attachBtn.addEventListener("click", (e) => { e.stopPropagation(); attachMenu.classList.toggle("active"); });
+document.addEventListener("click", (e) => { if (!attachMenu.contains(e.target) && !attachBtn.contains(e.target)) attachMenu.classList.remove("active"); });
