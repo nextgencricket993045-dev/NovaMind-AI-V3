@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Master Backend Engine (Media, Audio & Formats)
+// NovaMind AI V4 - Ultimate Master Production Backend (Final Release)
 // ====================================================================
 
 export default async function handler(req, res) {
@@ -15,43 +15,41 @@ export default async function handler(req, res) {
     let finalMediaUrl = null;
     let finalMediaType = null;
     
-    // 📐 Dynamic Resolution Logic based on Aspect Ratio Dropdown
+    // Dynamic Resolution Parameters Logic
     let resWidth = 1024;
     let resHeight = 1024;
-    
-    if (aspectRatio === "16:9") {
-        resWidth = 1280;
-        resHeight = 720;
-    } else if (aspectRatio === "9:16") {
-        resWidth = 720;
-        resHeight = 1280;
-    }
+    if (aspectRatio === "16:9") { resWidth = 1280; resHeight = 720; } 
+    else if (aspectRatio === "9:16") { resWidth = 720; resHeight = 1280; }
 
     const cleanPrompt = encodeURIComponent((message || "creative design").replace(/[^a-zA-Z0-9 ]/g, "").trim());
     const randomSeed = Math.floor(Math.random() * 1000000);
 
-    // 🎨 Core Media & Audio Generation Pipeline
+    // Multiformat Asset Pipeline
     if (generationMode === "image") {
         finalMediaType = "image";
         finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=${resWidth}&height=${resHeight}&seed=${randomSeed}&enhance=true`;
     } 
     else if (generationMode === "video") {
-        finalMediaType = "image"; // Simulating motion sequence frame rendering
-        finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}%20motion%20sequence%20animation?width=${resWidth}&height=${resHeight}&seed=${randomSeed}`;
+        finalMediaType = "image";
+        finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}%20cinematic%20motion%20sequence%20animation?width=${resWidth}&height=${resHeight}&seed=${randomSeed}`;
     } 
     else if (generationMode === "audio") {
         finalMediaType = "audio";
-        // Free synthesis engine to generate audio/music structures
         finalMediaUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=${cleanPrompt}%20music%20segment`;
     }
 
-    // 🧠 Google Gemini 2.5 Flash Pipeline
+    // System Orchestration & Growth Context Blueprint
+    let optimizedPrompt = message || "Hello";
+    if (generationMode === "chat") {
+        optimizedPrompt = `[SYSTEM CORE OPTIMIZATION: Act as an elite content developer and optimization expert. If the user mentions any video concept, story idea, script request, or channel strategy, you must answer creatively and ALWAYS append a structured '📊 DISCOVERABILITY & SEO METRICS' block at the bottom containing: 3 High-CTR Titles, 10 optimized search tags comma-separated, and 5 viral hashtags. Keep your tone direct, in English/Hindi mix.]\n\nUser Input: ${message}`;
+    }
+
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: message || "Hello" }] }]
+                contents: [{ parts: [{ text: optimizedPrompt }] }]
             })
         });
 
