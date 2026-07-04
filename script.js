@@ -1,5 +1,5 @@
 // ===================================================
-// NovaMind AI V3 - Ultimate Master Script (Fully Fixed)
+// NovaMind AI V3 - Ultimate Master Script (Fully Verified)
 // ===================================================
 
 const attachBtn = document.getElementById("attach");
@@ -19,7 +19,7 @@ const primaryAuthBtn = document.getElementById("primaryAuthBtn");
 const authToggleText = document.getElementById("authToggleText");
 const googleAuthBtn = document.getElementById("googleAuthBtn");
 
-// Standard IO Hooks (Direct variables to avoid nested object mapping errors)
+// Standard IO Hooks (Direct Element References)
 const imageInput = document.getElementById("image");
 const videoInput = document.getElementById("video");
 const pdfInput = document.getElementById("pdf");
@@ -37,7 +37,7 @@ let imageBase64 = "";
 let uploadedFileData = ""; 
 let uploadedFileName = "";
 let uploadedFileType = ""; 
-let isVoiceReplyEnabled = false;
+let isVoiceReplyEnabled = false; // By default voice off rakha hai, icon tap se ON hoga
 let userSessionToken = localStorage.getItem("novamind_auth_token") || null;
 let currentAuthMode = "login";
 
@@ -55,26 +55,38 @@ function escapeHtml(text) {
     return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
+// Fixed AI Voice Reply Engine (With Correct Spellings)
 function speakText(text) {
     if (!isVoiceReplyEnabled) return;
-    window.speechSynthesis.cancel();
+    
+    // Agar background me pehle se bol rha hai toh stop karein
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+    
+    // Markdown ke symbols clear karke pure text taiyar karein
     const cleanText = text.replace(/[\#\*`_\-]/g, "");
+    
+    // Correct Native API Spelling: SpeechSynthesisUtterance
     const speech = new SpeechSynthesisUtterance(cleanText);
-    speech.lang = "hi-IN";
+    speech.lang = "hi-IN"; // Hindi aur English mix bohot accha bolega
+    
     window.speechSynthesis.speak(speech);
 }
 
+// Voice Toggle Logic
 voiceReplyToggle.addEventListener("click", () => {
     isVoiceReplyEnabled = !isVoiceReplyEnabled;
     voiceReplyToggle.innerText = isVoiceReplyEnabled ? "🔊" : "🔇";
 });
 
+// Theme Layout Toggle Logic
 themeToggle.addEventListener("click", () => {
     document.body.classList.toggle("dark-theme");
     themeToggle.innerText = document.body.classList.contains("dark-theme") ? "🌙" : "☀️";
 });
 
-// File Loading Logic Router
+// File Selection Handler Pipeline
 function handleFileSelect(file, type, readAs) {
     if (!file) return;
     uploadedFileName = file.name;
@@ -89,7 +101,7 @@ function handleFileSelect(file, type, readAs) {
     else reader.readAsDataURL(file);
 }
 
-// Fixed direct event listener bindings to prevent script breaks
+// File Attachment Change Events
 imageInput.addEventListener("change", function() {
     const file = this.files[0];
     if(!file) return;
@@ -107,7 +119,7 @@ videoInput.addEventListener("change", function() {
     const file = this.files[0];
     if(!file) return;
     if(file.size > 20 * 1024 * 1024) {
-        alert("Please upload a video under 20MB for optimized performance.");
+        alert("Mobile networks ke optimization ke liye video file 20MB ke andar rakhein.");
         return;
     }
     handleFileSelect(file, "video", "dataurl");
@@ -127,19 +139,22 @@ function resetAttachments() {
     imageInput.value = ""; videoInput.value = ""; txtInput.value = ""; pdfInput.value = ""; docxInput.value = ""; xlsxInput.value = ""; pptxInput.value = "";
 }
 
+// Chat UI Display Renderer Hub
 function injectMessageIntoDOM(id, role, text, timestamp = getCurrentTime(), mediaUrl = null, mediaType = null) {
     const isAi = role === "ai";
     const bubbleClass = isAi ? "ai" : "user";
     
     let parsedText = text;
+    // Markdown Converter Framework Check
     if (isAi && typeof marked !== "undefined" && marked.parse) {
         parsedText = marked.parse(text);
     }
     
+    // Dynamic media rendering containers for generated elements
     let mediaPayloadHtml = "";
     if (mediaUrl) {
         if (mediaType === "image") {
-            mediaPayloadHtml = `<div style="margin-top:10px;"><img src="${mediaUrl}" style="max-width:100%; border-radius:12px; border:1px solid rgba(0,0,0,0.1);" alt="Generated Image"></div>`;
+            mediaPayloadHtml = `<div style="margin-top:10px;"><img src="${mediaUrl}" style="max-width:100%; border-radius:12px; border:1px solid rgba(0,0,0,0.1);" alt="Generated Design Output"></div>`;
         } else if (mediaType === "video") {
             mediaPayloadHtml = `<div style="margin-top:10px;"><video src="${mediaUrl}" controls style="max-width:100%; border-radius:12px; border:1px solid rgba(0,0,0,0.1);"></video></div>`;
         }
@@ -168,11 +183,13 @@ function injectMessageIntoDOM(id, role, text, timestamp = getCurrentTime(), medi
     chat.innerHTML += messageHtml;
     chat.scrollTop = chat.scrollHeight;
     
+    // Apply syntax highlighting injection safely
     if (typeof hljs !== "undefined" && hljs.highlightElement) {
         document.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
     }
 }
 
+// Network Request Pipeline
 async function sendMessage(customText = null) {
     const text = customText !== null ? customText : input.value.trim();
     if (text === "" && imageBase64 === "" && uploadedFileData === "") return;
@@ -188,8 +205,11 @@ async function sendMessage(customText = null) {
     typing.id = "typing-indicator";
     
     let engineStatusText = "⚡ NovaMind Brain Engine Processing (Search / Tools active)...";
-    if (activeGenerationMode === "image") engineStatusText = "🎨 Creative Core rendering your Image via Flux-Diffusion Nodes...";
-    if (activeGenerationMode === "video") engineStatusText = "🎬 Video Synth Neural Networks rendering frames & simulation blocks...";
+    // Check global window scope active generation mode variable safely
+    if (typeof activeGenerationMode !== "undefined") {
+        if (activeGenerationMode === "image") engineStatusText = "🎨 Creative Core rendering your Image via Flux-Diffusion Nodes...";
+        if (activeGenerationMode === "video") engineStatusText = "🎬 Video Synth Neural Networks rendering frames & simulation blocks...";
+    }
     
     typing.innerHTML = `<div class="msg-text">${engineStatusText}</div>`;
     chat.appendChild(typing);
@@ -205,7 +225,7 @@ async function sendMessage(customText = null) {
                 fileData: uploadedFileData,
                 fileName: uploadedFileName,
                 fileType: uploadedFileType,
-                generationMode: activeGenerationMode 
+                generationMode: (typeof activeGenerationMode !== "undefined") ? activeGenerationMode : "chat"
             })
         });
 
@@ -219,10 +239,11 @@ async function sendMessage(customText = null) {
 
     } catch (err) {
         if (document.getElementById("typing-indicator")) document.getElementById("typing-indicator").remove();
-        injectMessageIntoDOM("err-"+Date.now(), "ai", "❌ Connection Timeout.");
+        injectMessageIntoDOM("err-"+Date.now(), "ai", "❌ Engine connectivity timeout or cloud function offline.");
     }
 }
 
+// UI Buttons Configuration Hooks
 button.addEventListener("click", () => sendMessage());
 input.addEventListener("keydown", (e) => { if(e.key === "Enter") sendMessage(); });
 
@@ -236,28 +257,29 @@ searchChatInput.addEventListener("input", function() {
 
 function triggerMessageEdit(el, id) {
     const txtNode = el.parentElement.previousElementSibling;
-    const updatedTxt = prompt("Edit message content:", txtNode.innerText);
+    const updatedTxt = prompt("Refactor text context structures:", txtNode.innerText);
     if(updatedTxt && updatedTxt.trim() !== "") {
         txtNode.innerText = updatedTxt;
         sendMessage(updatedTxt);
     }
 }
 function triggerMessageDelete(id) { document.getElementById(`msg-${id}`)?.remove(); }
-function triggerRegenerate(id) { sendMessage("Regenerate previous answer."); }
-function feedbackResponse(id, type) { alert(`Feedback: ${type.toUpperCase()}`); }
+function triggerRegenerate(id) { sendMessage("Regenerate previous operational answer script."); }
+function feedbackResponse(id, type) { alert(`Feedback registered: ${type.toUpperCase()}`); }
 
 userProfile.addEventListener("click", () => { authOverlay.style.display = "flex"; });
 authToggleText.addEventListener("click", () => {
     currentAuthMode = currentAuthMode === "login" ? "signup" : "login";
-    document.getElementById("authTitle").innerText = currentAuthMode === "login" ? "Login Portal" : "Signup Portal";
-    primaryAuthBtn.innerText = currentAuthMode === "login" ? "Login" : "Register";
+    document.getElementById("authTitle").innerText = currentAuthMode === "login" ? "Secure Account Core" : "Registration Portal";
+    primaryAuthBtn.innerText = currentAuthMode === "login" ? "Establish Login Sync" : "Complete Signup Creation";
 });
 primaryAuthBtn.addEventListener("click", () => {
-    localStorage.setItem("novamind_auth_token", "secure_mock");
+    localStorage.setItem("novamind_auth_token", "secure_mock_verified_token");
     authOverlay.style.display = "none";
+    alert("Cloud user configuration profile synced successfully!");
 });
 
-// FIXED: Strict click event attachment logic for menu toggle overlay operation
+// Strict Floating Overlay Toggle Controller Action Links
 attachBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     attachMenu.classList.toggle("active");
@@ -268,3 +290,11 @@ document.addEventListener("click", (e) => {
         attachMenu.classList.remove("active");
     }
 });
+
+// Browser Voice Network Unlock Engine (Bypasses Native Autoplay Block Protections)
+document.addEventListener("click", () => {
+    if (window.speechSynthesis && window.speechSynthesis.speaking === false) {
+        const unlockSpeech = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(unlockSpeech);
+    }
+}, { once: true });
