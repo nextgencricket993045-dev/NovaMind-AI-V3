@@ -8,7 +8,6 @@ export default async function handler(req, res) {
     const { message, generationMode } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // Sabse pehle check karte hain ki Vercel me API key daali gayi hai ya nahi
     if (!apiKey) {
         return res.status(200).json({ reply: "⚠️ API Key Missing: Vercel ke Environment Variables me 'GEMINI_API_KEY' set nahi hai!" });
     }
@@ -24,7 +23,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        // FIXED: Using the exact valid model string 'gemini-1.5-flash-latest' 
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 
         const data = await response.json();
 
-        // Agar Google Gemini API error de raha hai (jaise Invalid API Key), toh seedha screen par dikhao
+        // Error detection block
         if (data.error) {
             return res.status(200).json({ reply: `⚠️ Google API Error: ${data.error.message}` });
         }
