@@ -40,13 +40,34 @@ export default async function handler(req, res) {
   }
 
   // Image memory में save नहीं होगी
-  const contents = [
-    ...chatMemory[userId],
+  const systemInstruction = {
+  role: "user",
+  parts: [
     {
-      role: "user",
-      parts: userParts
+      text: `You are NovaMind AI.
+
+If the uploaded image contains:
+- Maths questions → solve step by step.
+- Physics questions → explain formula and solve.
+- Chemistry questions → explain and answer.
+- Biology questions → explain clearly.
+- Notes → summarize and explain.
+- Graphs/Tables → analyze them.
+- Normal photos → describe them.
+
+Always reply in the same language as the user.`
     }
-  ];
+  ]
+};
+
+const contents = [
+  systemInstruction,
+  ...chatMemory[userId],
+  {
+    role: "user",
+    parts: userParts
+  }
+];
 
   try {
 
