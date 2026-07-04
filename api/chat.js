@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Ultimate Master Production Backend (Final Release)
+// NovaMind AI V4 - Clean Production Backend (No Fallback Text)
 // ====================================================================
 
 export default async function handler(req, res) {
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const cleanPrompt = encodeURIComponent((message || "creative design").replace(/[^a-zA-Z0-9 ]/g, "").trim());
     const randomSeed = Math.floor(Math.random() * 1000000);
 
-    // Multiformat Asset Pipeline
+    // Multiformat Asset Pipeline (Pollinations AI - Independent of Google Quota)
     if (generationMode === "image") {
         finalMediaType = "image";
         finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=${resWidth}&height=${resHeight}&seed=${randomSeed}&enhance=true`;
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         finalMediaUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=${cleanPrompt}%20music%20segment`;
     }
 
-    // System Orchestration & Growth Context Blueprint
+    // Strict System Optimization Context Injection
     let optimizedPrompt = message || "Hello";
     if (generationMode === "chat") {
         optimizedPrompt = `[SYSTEM CORE OPTIMIZATION: Act as an elite content developer and optimization expert. If the user mentions any video concept, story idea, script request, or channel strategy, you must answer creatively and ALWAYS append a structured '📊 DISCOVERABILITY & SEO METRICS' block at the bottom containing: 3 High-CTR Titles, 10 optimized search tags comma-separated, and 5 viral hashtags. Keep your tone direct, in English/Hindi mix.]\n\nUser Input: ${message}`;
@@ -55,21 +55,23 @@ export default async function handler(req, res) {
 
         const data = await response.json();
 
+        // If Google Quota Exceeded, show direct standard warning message
         if (data.error) {
-            return res.status(200).json({ reply: `⚠️ Google API Error: ${data.error.message}` });
+            return res.status(200).json({ 
+                reply: `⚠️ Google API Error: ${data.error.message}`, 
+                mediaUrl: finalMediaUrl, 
+                mediaType: finalMediaType 
+            });
         }
 
-        let reply = "Processing complete, par AI ne kuch nahi likha.";
-        
+        let reply = "Processing complete.";
         if (data.candidates && data.candidates.length > 0) {
             const candidate = data.candidates[0];
             if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
                 reply = candidate.content.parts[0].text;
             } else if (candidate.finishReason) {
-                reply = `⚠️ Blocked by Google Safety Filter. Reason: ${candidate.finishReason}`;
+                reply = `⚠️ Response Blocked by Google Safety. Reason: ${candidate.finishReason}`;
             }
-        } else if (data.promptFeedback) {
-            reply = `⚠️ Prompt Blocked. Reason: ${data.promptFeedback.blockReason}`;
         }
 
         return res.status(200).json({ 
@@ -79,6 +81,10 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        return res.status(200).json({ reply: `⚠️ Server Connection Crash: ${error.message}` });
+        return res.status(200).json({ 
+            reply: `⚠️ Server Connection Error: ${error.message}`, 
+            mediaUrl: finalMediaUrl, 
+            mediaType: finalMediaType 
+        });
     }
 }
