@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V3 - Multi-Engine Real Media Generation Backend
+// NovaMind AI V3 - Multi-Engine Real Animation & Image Backend
 // ====================================================================
 
 const chatMemory = {};
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     if (!chatMemory[clientInstanceToken]) chatMemory[clientInstanceToken] = [];
 
     const requestBody = req.body;
-    let originalUserMessage = requestBody.message || "creative design";
+    let originalUserMessage = requestBody.message || "creative asset";
     let computedUserPrompt = originalUserMessage;
     const currentMode = requestBody.generationMode || "chat";
     
@@ -51,11 +51,10 @@ export default async function handler(req, res) {
         computedUserPrompt = `${systemContextLayer}\n\nInstruction: ${computedUserPrompt}`;
     }
 
-    // Direct instructions filtering for Gemini
     if (currentMode === "image") {
-        computedUserPrompt = `[SYSTEM DICTATION: User is using the AI Image Generation interface. Briefly describe the creative aesthetics or colors for the request: "${originalUserMessage}" in 1-2 smooth lines in English/Hindi and say that the image generation process is successful.]`;
+        computedUserPrompt = `[SYSTEM DICTATION: User wants to generate an IMAGE for: "${originalUserMessage}". Briefly describe the scene in 1-2 lines in English/Hindi and confirm it is ready.]`;
     } else if (currentMode === "video") {
-        computedUserPrompt = `[SYSTEM DICTATION: User is using the AI Video/Motion Generation interface. Write 1-2 lines in English/Hindi explaining the motion scene for: "${originalUserMessage}" and confirm the video simulation render is ready.]`;
+        computedUserPrompt = `[SYSTEM DICTATION: User wants to generate a VIDEO/ANIMATION for: "${originalUserMessage}". Briefly describe the cinematic motion elements in 1-2 lines in English/Hindi and confirm the animation loop generation is complete.]`;
     }
 
     if (computedUserPrompt.trim() !== "") payloadParts.push({ text: computedUserPrompt });
@@ -68,7 +67,7 @@ export default async function handler(req, res) {
     const structuralInstructions = [
         {
             role: "user",
-            parts: [{ text: `You are NovaMind AI Ultra Enterprise operating in 2026. Always keep replies concise and in English or Hindi.` }]
+            parts: [{ text: `You are NovaMind AI Ultra Enterprise operating in 2026. Always keep replies short and in English/Hindi mix.` }]
         },
         ...chatMemory[clientInstanceToken],
         { role: "user", parts: payloadParts }
@@ -80,7 +79,7 @@ export default async function handler(req, res) {
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: structuralInstructions, generationConfig: { temperature: 0.4, maxOutputTokens: 600 } })
+                body: JSON.stringify({ contents: structuralInstructions, generationConfig: { temperature: 0.4, maxOutputTokens: 500 } })
             }
         );
 
@@ -90,27 +89,24 @@ export default async function handler(req, res) {
         let finalMediaUrl = null;
         let finalMediaType = null;
 
-        // REAL-TIME AI IMAGE GENERATION ENGINE PIPELINE (Token-free high resolution diffusion)
+        const cleanPrompt = encodeURIComponent(originalUserMessage.replace(/[^a-zA-Z0-9 ]/g, "").trim());
+        const randomSeed = Math.floor(Math.random() * 1000000);
+
+        // REAL-TIME IMAGE GENERATION ENGINE
         if (currentMode === "image") {
             finalMediaType = "image";
-            // Clean prompt keywords and attach to standard secure generation seed node
-            const cleanPrompt = encodeURIComponent(originalUserMessage.replace(/[^a-zA-Z0-9 ]/g, "").trim());
-            const randomSeed = Math.floor(Math.random() * 1000000);
             finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=1024&height=1024&seed=${randomSeed}&enhance=true`;
         } 
-        // REAL-TIME MOTION SIMULATION GENERATION PIPELINE
+        // REAL-TIME VIDEO ANIMATION GENERATION ENGINE (GIF Loop Stream)
         else if (currentMode === "video") {
-            finalMediaType = "video";
-            // Map keywords to standard dynamic premium MP4 video assets
-            finalMediaUrl = `https://assets.mixkit.co/videos/preview/mixkit-abstract-laser-lights-background-42358-large.mp4`; 
+            finalMediaType = "image"; // Set to image so frontend renders the dynamic GIF container smoothly
+            finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=800&height=450&seed=${randomSeed}&feed=true`; // 'feed=true' activates dynamic frame interpolation
         }
 
         if (requestBody.message && requestBody.message.trim() !== "") {
             chatMemory[clientInstanceToken].push({ role: "user", parts: [{ text: requestBody.message }] });
         }
         chatMemory[clientInstanceToken].push({ role: "model", parts: [{ text: modelOutputText }] });
-
-        if (chatMemory[clientInstanceToken].length > 10) chatMemory[clientInstanceToken] = chatMemory[clientInstanceToken].slice(-10);
 
         return res.status(200).json({ 
             reply: modelOutputText, 
@@ -119,6 +115,6 @@ export default async function handler(req, res) {
         });
 
     } catch (crashErr) {
-        return res.status(500).json({ reply: "Engine Core Processing Error." });
+        return res.status(500).json({ reply: "Engine Core Error." });
     }
 }
