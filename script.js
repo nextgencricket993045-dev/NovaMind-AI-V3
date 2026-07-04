@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Master Frontend Engine (Complete Auth Suite)
+// NovaMind AI V4 - Master Frontend Engine (Fully Functional Mock Auth)
 // ====================================================================
 
 let imageBase64 = null;
@@ -277,7 +277,7 @@ window.triggerMessageEdit = function(el, id) {
 };
 
 // ==========================================
-// 👤 Professional Auth Gateway (Sign In / Sign Up / Google)
+// 👤 Professional Fully Functional Auth System
 // ==========================================
 const userProfileBtn = document.getElementById('userProfile');
 let authOverlay = document.querySelector('.auth-overlay');
@@ -293,7 +293,6 @@ if (!authOverlay) {
                 <h3 id="authTitle" style="margin:0; font-size:20px; color:#fff;">👤 Sign In to NovaMind</h3>
             </div>
             
-            <!-- Google Login Button -->
             <button id="googleAuthBtn" style="width:100%; padding:11px; margin-top:10px; margin-bottom:15px; border-radius:10px; border:1px solid #475569; background:#fff; color:#1e293b; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:0.2s;">
                 <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/web-24dp/copy_of_web-24dp.png" width="18" alt="Google Logo">
                 <span id="googleBtnText">Continue with Google</span>
@@ -301,9 +300,7 @@ if (!authOverlay) {
             
             <div style="text-align:center; margin:10px 0; opacity:0.5; font-size:12px;">— OR —</div>
 
-            <!-- Extra input field for Name (Hidden in Sign In mode) -->
             <input type="text" id="authName" placeholder="Full Name" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #475569; background:rgba(0,0,0,0.3); color:#fff; display:none; box-sizing:border-box;">
-            
             <input type="text" id="authUsername" placeholder="Email Address" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #475569; background:rgba(0,0,0,0.3); color:#fff; box-sizing:border-box;">
             <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #475569; background:rgba(0,0,0,0.3); color:#fff; box-sizing:border-box;">
             
@@ -319,8 +316,12 @@ if (!authOverlay) {
     document.body.appendChild(authOverlay);
 }
 
-// State management variables
 let authMode = "signin"; 
+
+// Local dynamic database structure storage logic array setup
+if(!localStorage.getItem("nova_mock_users")) {
+    localStorage.setItem("nova_mock_users", JSON.stringify([{email: "ayush@novamind.com", pass: "123456", name: "Ayush"}]));
+}
 
 if (userProfileBtn) {
     userProfileBtn.addEventListener('click', () => {
@@ -328,7 +329,7 @@ if (userProfileBtn) {
     });
 }
 
-// Event delegation inside the Authentication Panel
+// RESTORED COMPONENT HANDLERS: Complete operational workflow tracking
 authOverlay.addEventListener('click', (e) => {
     const nameField = document.getElementById('authName');
     const titleText = document.getElementById('authTitle');
@@ -337,12 +338,10 @@ authOverlay.addEventListener('click', (e) => {
     const switchLink = document.getElementById('authSwitchModeBtn');
     const googleText = document.getElementById('googleBtnText');
 
-    // Close window trigger
     if (e.target.id === 'authCloseBtn') {
         authOverlay.style.display = 'none';
     }
 
-    // Dynamic Switch Mode Toggler (Sign In <-> Sign Up)
     if (e.target.id === 'authSwitchModeBtn') {
         e.preventDefault();
         if (authMode === "signin") {
@@ -364,30 +363,70 @@ authOverlay.addEventListener('click', (e) => {
         }
     }
 
-    // Google Authentication Simulation Button
+    // FIXED: Google Login Operational Workflow Synchronization Structure
     if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
-        alert("Redirecting to secure Google Account OAuth Gateway... 🔐");
-        alert("Success! Authenticated via secure Google token.");
+        const mockGoogleEmail = "ayush.google@gmail.com";
+        const generatedToken = "google_oauth_token_" + Math.random().toString(36).substring(7);
+        
+        localStorage.setItem("novaSessionToken", generatedToken);
+        localStorage.setItem("currentUser", "Ayush (Google Connected)");
+        
+        // Custom message update block element
+        const welcomeMessage = document.querySelector(".message.ai .msg-text");
+        if(welcomeMessage) {
+            welcomeMessage.innerHTML = `Hello Ayush 👋<br><br>NovaMind V4 Engine is successfully synchronized via Google Account! Multi-format operations are live.`;
+        }
+
+        alert("🔄 Syncing Google Token Credentials...\nAuthorized State established!");
         authOverlay.style.display = 'none';
     }
 
-    // Core Submit Logic
+    // FIXED: Email / Password Core Structural Sync Logic Handler
     if (e.target.id === 'authSubmitBtn') {
-        const email = document.getElementById('authUsername')?.value;
-        const pass = document.getElementById('authPassword')?.value;
-        const name = nameField?.value;
+        const email = document.getElementById('authUsername')?.value.trim();
+        const pass = document.getElementById('authPassword')?.value.trim();
+        const name = nameField?.value.trim();
+        let userDb = JSON.parse(localStorage.getItem("nova_mock_users"));
 
         if (!email || !pass) {
-            alert("Please fill all required standard fields.");
+            alert("⚠️ Please fill all required credential inputs.");
             return;
         }
 
         if (authMode === "signup") {
-            if (!name) { alert("Please provide your full name for registration."); return; }
-            alert(`Registration successful! Account generated for ${name}.`);
+            if (!name) { alert("⚠️ Please provide your full name for registration."); return; }
+            
+            // Check if user exists
+            if(userDb.some(u => u.email === email)) {
+                alert("⚠️ Account already exists with this email address.");
+                return;
+            }
+
+            userDb.push({email, pass, name});
+            localStorage.setItem("nova_mock_users", JSON.stringify(userDb));
+            localStorage.setItem("novaSessionToken", "token_" + Date.now());
+            localStorage.setItem("currentUser", name);
+            
+            alert(`🎉 Registration successful! Welcome ${name}.`);
         } else {
-            alert(`Welcome back! Session authorized for ${email}.`);
+            // Sign In Validation Layer Loop
+            const authenticatedUser = userDb.find(u => u.email === email && u.pass === pass);
+            if(authenticatedUser) {
+                localStorage.setItem("novaSessionToken", "token_" + Date.now());
+                localStorage.setItem("currentUser", authenticatedUser.name);
+                alert(`🚀 Welcome back, ${authenticatedUser.name}! Session initialized.`);
+            } else {
+                alert("❌ Invalid email or password structure phrase. Please check credentials or Sign Up.");
+                return;
+            }
         }
+        
+        const welcomeMessage = document.querySelector(".message.ai .msg-text");
+        const activeUser = localStorage.getItem("currentUser") || "Ayush";
+        if(welcomeMessage) {
+            welcomeMessage.innerHTML = `Hello ${activeUser} 👋<br><br>NovaMind V4 Engine is successfully synchronized! Multi-format operations are active.`;
+        }
+        
         authOverlay.style.display = 'none';
     }
 });
