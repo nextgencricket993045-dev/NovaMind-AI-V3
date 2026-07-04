@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V3 - Ultimate Error Detector & Response Handler
+// NovaMind AI V3 - Ultimate Stable API Engine
 // ====================================================================
 
 export default async function handler(req, res) {
@@ -23,8 +23,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        // FIXED: Using the exact valid model string 'gemini-1.5-flash-latest' 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+        // FIXED: Changed to the most universally supported model 'gemini-pro'
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
