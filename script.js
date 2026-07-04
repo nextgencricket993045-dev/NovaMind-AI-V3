@@ -1,6 +1,6 @@
-// ==========================================
-// NovaMind AI V3 - Global Master Controller
-// ==========================================
+// ===================================================
+// NovaMind AI V3 - Ultimate Master Script (Fully Fixed)
+// ===================================================
 
 const attachBtn = document.getElementById("attach");
 const attachMenu = document.getElementById("attachMenu");
@@ -19,15 +19,14 @@ const primaryAuthBtn = document.getElementById("primaryAuthBtn");
 const authToggleText = document.getElementById("authToggleText");
 const googleAuthBtn = document.getElementById("googleAuthBtn");
 
-// Standard IO Hooks
-const fileInputs = {
-    image: document.getElementById("image"),
-    pdf: document.getElementById("pdf"),
-    docx: document.getElementById("docx"),
-    txt: document.getElementById("txt"),
-    xlsx: document.getElementById("xlsx"),
-    pptx: document.getElementById("pptx")
-};
+// Standard IO Hooks (Direct variables to avoid nested object mapping errors)
+const imageInput = document.getElementById("image");
+const videoInput = document.getElementById("video");
+const pdfInput = document.getElementById("pdf");
+const docxInput = document.getElementById("docx");
+const txtInput = document.getElementById("txt");
+const xlsxInput = document.getElementById("xlsx");
+const pptxInput = document.getElementById("pptx");
 
 const previewContainer = document.getElementById("previewContainer");
 const previewName = document.getElementById("previewName");
@@ -42,14 +41,6 @@ let isVoiceReplyEnabled = false;
 let userSessionToken = localStorage.getItem("novamind_auth_token") || null;
 let currentAuthMode = "login";
 
-// Setup Highlight Engine Configurations
-marked.setOptions({
-    highlight: function(code, lang) {
-        return hljs.highlightAuto(code).value;
-    },
-    breaks: true
-});
-
 function getCurrentTime() {
     const now = new Date();
     let hours = now.getHours();
@@ -60,17 +51,10 @@ function getCurrentTime() {
     return `${hours}:${minutes} ${ampm}`;
 }
 
-// Persistent Storage Layer (Supabase Fallback Pattern via LocalStorage Engine)
-function getSavedHistory() {
-    return JSON.parse(localStorage.getItem("novamind_db_history")) || [];
-}
-function saveToPersistentMemory(role, content, files = null) {
-    let internalDB = getSavedHistory();
-    internalDB.push({ id: Date.now(), role, content, timestamp: getCurrentTime(), files });
-    localStorage.setItem("novamind_db_history", JSON.stringify(internalDB));
+function escapeHtml(text) {
+    return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
-// Speech Systems Engine
 function speakText(text) {
     if (!isVoiceReplyEnabled) return;
     window.speechSynthesis.cancel();
@@ -80,11 +64,86 @@ function speakText(text) {
     window.speechSynthesis.speak(speech);
 }
 
-// Global Core Message Render Router
-function injectMessageIntoDOM(id, role, text, timestamp = getCurrentTime()) {
+voiceReplyToggle.addEventListener("click", () => {
+    isVoiceReplyEnabled = !isVoiceReplyEnabled;
+    voiceReplyToggle.innerText = isVoiceReplyEnabled ? "🔊" : "🔇";
+});
+
+themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark-theme");
+    themeToggle.innerText = document.body.classList.contains("dark-theme") ? "🌙" : "☀️";
+});
+
+// File Loading Logic Router
+function handleFileSelect(file, type, readAs) {
+    if (!file) return;
+    uploadedFileName = file.name;
+    uploadedFileType = type;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        uploadedFileData = e.target.result;
+        previewName.innerText = `${type.toUpperCase()}: ${file.name}`;
+        previewContainer.style.display = "flex";
+    };
+    if (readAs === "text") reader.readAsText(file);
+    else reader.readAsDataURL(file);
+}
+
+// Fixed direct event listener bindings to prevent script breaks
+imageInput.addEventListener("change", function() {
+    const file = this.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        imageBase64 = e.target.result;
+        previewName.innerText = `📷 Image: ${file.name}`;
+        previewContainer.style.display = "flex";
+    };
+    reader.readAsDataURL(file);
+    attachMenu.classList.remove("active");
+});
+
+videoInput.addEventListener("change", function() {
+    const file = this.files[0];
+    if(!file) return;
+    if(file.size > 20 * 1024 * 1024) {
+        alert("Please upload a video under 20MB for optimized performance.");
+        return;
+    }
+    handleFileSelect(file, "video", "dataurl");
+});
+
+txtInput.addEventListener("change", function() { handleFileSelect(this.files[0], "txt", "text"); });
+pdfInput.addEventListener("change", function() { handleFileSelect(this.files[0], "pdf", "dataurl"); });
+docxInput.addEventListener("change", function() { handleFileSelect(this.files[0], "docx", "dataurl"); });
+xlsxInput.addEventListener("change", function() { handleFileSelect(this.files[0], "xlsx", "dataurl"); });
+pptxInput.addEventListener("change", function() { handleFileSelect(this.files[0], "pptx", "dataurl"); });
+
+cancelPreview.addEventListener("click", resetAttachments);
+
+function resetAttachments() {
+    imageBase64 = ""; uploadedFileData = ""; uploadedFileName = ""; uploadedFileType = "";
+    previewName.innerText = ""; previewContainer.style.display = "none";
+    imageInput.value = ""; videoInput.value = ""; txtInput.value = ""; pdfInput.value = ""; docxInput.value = ""; xlsxInput.value = ""; pptxInput.value = "";
+}
+
+function injectMessageIntoDOM(id, role, text, timestamp = getCurrentTime(), mediaUrl = null, mediaType = null) {
     const isAi = role === "ai";
     const bubbleClass = isAi ? "ai" : "user";
-    const parsedText = isAi ? marked.parse(text) : text;
+    
+    let parsedText = text;
+    if (isAi && typeof marked !== "undefined" && marked.parse) {
+        parsedText = marked.parse(text);
+    }
+    
+    let mediaPayloadHtml = "";
+    if (mediaUrl) {
+        if (mediaType === "image") {
+            mediaPayloadHtml = `<div style="margin-top:10px;"><img src="${mediaUrl}" style="max-width:100%; border-radius:12px; border:1px solid rgba(0,0,0,0.1);" alt="Generated Image"></div>`;
+        } else if (mediaType === "video") {
+            mediaPayloadHtml = `<div style="margin-top:10px;"><video src="${mediaUrl}" controls style="max-width:100%; border-radius:12px; border:1px solid rgba(0,0,0,0.1);"></video></div>`;
+        }
+    }
     
     const metaControls = isAi ? `
         <span class="action-icon" onclick="navigator.clipboard.writeText(\`${text.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)">📋 Copy</span>
@@ -99,7 +158,7 @@ function injectMessageIntoDOM(id, role, text, timestamp = getCurrentTime()) {
 
     const messageHtml = `
         <div class="message ${bubbleClass}" data-id="${id}" id="msg-${id}">
-            <div class="msg-text">${parsedText}</div>
+            <div class="msg-text">${parsedText} ${mediaPayloadHtml}</div>
             <div class="msg-meta-bar">
                 <span>${timestamp}</span>
                 ${metaControls}
@@ -108,10 +167,12 @@ function injectMessageIntoDOM(id, role, text, timestamp = getCurrentTime()) {
     `;
     chat.innerHTML += messageHtml;
     chat.scrollTop = chat.scrollHeight;
-    document.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+    
+    if (typeof hljs !== "undefined" && hljs.highlightElement) {
+        document.querySelectorAll('pre code').forEach((el) => hljs.highlightElement(el));
+    }
 }
 
-// Messaging Operations Pipeline
 async function sendMessage(customText = null) {
     const text = customText !== null ? customText : input.value.trim();
     if (text === "" && imageBase64 === "" && uploadedFileData === "") return;
@@ -120,15 +181,17 @@ async function sendMessage(customText = null) {
     if (customText === null) input.value = "";
     previewContainer.style.display = "none";
 
-    // Show on Viewport
     injectMessageIntoDOM(msgId, "user", text);
-    saveToPersistentMemory("user", text, { name: uploadedFileName, type: uploadedFileType });
 
-    // Show Typing State
     const typing = document.createElement("div");
     typing.className = "message ai";
     typing.id = "typing-indicator";
-    typing.innerHTML = `<div class="msg-text">⚡ NovaMind Engine Processing (Search / Document / Tools active)...</div>`;
+    
+    let engineStatusText = "⚡ NovaMind Brain Engine Processing (Search / Tools active)...";
+    if (activeGenerationMode === "image") engineStatusText = "🎨 Creative Core rendering your Image via Flux-Diffusion Nodes...";
+    if (activeGenerationMode === "video") engineStatusText = "🎬 Video Synth Neural Networks rendering frames & simulation blocks...";
+    
+    typing.innerHTML = `<div class="msg-text">${engineStatusText}</div>`;
     chat.appendChild(typing);
     chat.scrollTop = chat.scrollHeight;
 
@@ -141,7 +204,8 @@ async function sendMessage(customText = null) {
                 image: imageBase64,
                 fileData: uploadedFileData,
                 fileName: uploadedFileName,
-                fileType: uploadedFileType
+                fileType: uploadedFileType,
+                generationMode: activeGenerationMode 
             })
         });
 
@@ -149,63 +213,19 @@ async function sendMessage(customText = null) {
         if (document.getElementById("typing-indicator")) document.getElementById("typing-indicator").remove();
 
         const aiMsgId = "ai-" + Date.now();
-        injectMessageIntoDOM(aiMsgId, "ai", data.reply);
-        saveToPersistentMemory("ai", data.reply);
+        injectMessageIntoDOM(aiMsgId, "ai", data.reply, getCurrentTime(), data.mediaUrl, data.mediaType);
         speakText(data.reply);
         resetAttachments();
 
     } catch (err) {
         if (document.getElementById("typing-indicator")) document.getElementById("typing-indicator").remove();
-        injectMessageIntoDOM("err-"+Date.now(), "ai", "❌ Operation failed. Engine connection timeout.");
+        injectMessageIntoDOM("err-"+Date.now(), "ai", "❌ Connection Timeout.");
     }
 }
 
-// Document Bindings Framework
-function trackFileInput(element, type, processMethod) {
-    element.addEventListener("change", function() {
-        const file = this.files[0];
-        if(!file) return;
-        uploadedFileName = file.name;
-        uploadedFileType = type;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            uploadedFileData = e.target.result;
-            previewName.innerText = `${type.toUpperCase()}: ${file.name}`;
-            previewContainer.style.display = "flex";
-        };
-        if(processMethod === "text") reader.readAsText(file);
-        else reader.readAsDataURL(file);
-    });
-}
-
-trackFileInput(fileInputs.txt, "txt", "text");
-trackFileInput(fileInputs.pdf, "pdf", "dataurl");
-trackFileInput(fileInputs.docx, "docx", "dataurl");
-trackFileInput(fileInputs.xlsx, "xlsx", "dataurl");
-trackFileInput(fileInputs.pptx, "pptx", "dataurl");
-
-fileInputs.image.addEventListener("change", function() {
-    const file = this.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => { imageBase64 = e.target.result; previewName.innerText = `📷 Image: ${file.name}`; previewContainer.style.display = "flex"; };
-    reader.readAsDataURL(file);
-});
-
-cancelPreview.addEventListener("click", resetAttachments);
-function resetAttachments() {
-    imageBase64 = ""; uploadedFileData = ""; uploadedFileName = ""; uploadedFileType = "";
-    previewName.innerText = ""; previewContainer.style.display = "none";
-    Object.keys(fileInputs).forEach(k => fileInputs[k].value = "");
-}
-
-// Client Features Event Binds
 button.addEventListener("click", () => sendMessage());
 input.addEventListener("keydown", (e) => { if(e.key === "Enter") sendMessage(); });
-voiceReplyToggle.addEventListener("click", () => { isVoiceReplyEnabled = !isVoiceReplyEnabled; voiceReplyToggle.innerText = isVoiceReplyEnabled ? "🔊" : "🔇"; });
-themeToggle.addEventListener("click", () => { document.body.classList.toggle("dark-theme"); themeToggle.innerText = document.body.classList.contains("dark-theme") ? "🌙" : "☀️"; });
 
-// Chat History Real-time Search Engine
 searchChatInput.addEventListener("input", function() {
     const query = this.value.toLowerCase();
     document.querySelectorAll(".message").forEach(msg => {
@@ -214,40 +234,37 @@ searchChatInput.addEventListener("input", function() {
     });
 });
 
-// Edit / Delete Interactivity Implementations
 function triggerMessageEdit(el, id) {
     const txtNode = el.parentElement.previousElementSibling;
-    const updatedTxt = prompt("Refactor message structural contents:", txtNode.innerText);
+    const updatedTxt = prompt("Edit message content:", txtNode.innerText);
     if(updatedTxt && updatedTxt.trim() !== "") {
         txtNode.innerText = updatedTxt;
         sendMessage(updatedTxt);
     }
 }
-function triggerMessageDelete(id) {
-    document.getElementById(`msg-${id}`)?.remove();
-}
-function triggerRegenerate(id) {
-    sendMessage("Regenerate response for previous processing cycle.");
-}
-function feedbackResponse(id, type) {
-    alert(`Feedback registered: ${type.toUpperCase()}`);
-}
+function triggerMessageDelete(id) { document.getElementById(`msg-${id}`)?.remove(); }
+function triggerRegenerate(id) { sendMessage("Regenerate previous answer."); }
+function feedbackResponse(id, type) { alert(`Feedback: ${type.toUpperCase()}`); }
 
-// User Gate Access Handling
 userProfile.addEventListener("click", () => { authOverlay.style.display = "flex"; });
 authToggleText.addEventListener("click", () => {
     currentAuthMode = currentAuthMode === "login" ? "signup" : "login";
-    document.getElementById("authTitle").innerText = currentAuthMode === "login" ? "Login System Portal" : "Registration System Portal";
-    primaryAuthBtn.innerText = currentAuthMode === "login" ? "Proceed Configuration" : "Complete Registration";
+    document.getElementById("authTitle").innerText = currentAuthMode === "login" ? "Login Portal" : "Signup Portal";
+    primaryAuthBtn.innerText = currentAuthMode === "login" ? "Login" : "Register";
 });
 primaryAuthBtn.addEventListener("click", () => {
-    localStorage.setItem("novamind_auth_token", "session_mock_secure_verified");
-    alert("Authentication Process Simulated and Synced to cloud pipeline structure.");
+    localStorage.setItem("novamind_auth_token", "secure_mock");
     authOverlay.style.display = "none";
 });
 
-// PWA System Engine Initializer Setup
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); const pwaBtn = document.getElementById("pwaInstall"); pwaBtn.style.display = "block";
-    pwaBtn.addEventListener('click', () => { e.prompt(); pwaBtn.style.display = "none"; });
+// FIXED: Strict click event attachment logic for menu toggle overlay operation
+attachBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    attachMenu.classList.toggle("active");
+});
+
+document.addEventListener("click", (e) => {
+    if (!attachMenu.contains(e.target) && !attachBtn.contains(e.target)) {
+        attachMenu.classList.remove("active");
+    }
 });
