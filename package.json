@@ -1,5 +1,9 @@
 {
   "name": "novamind-ai-v3",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  }
 }
