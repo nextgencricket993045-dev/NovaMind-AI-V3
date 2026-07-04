@@ -284,3 +284,22 @@ body {
     body { padding: 0; }
     .app { width: 100%; height: 100vh; border-radius: 0; }
 }
+/* ==========================================
+   Advanced Creator Controls
+========================================== */
+.ratio-select {
+    margin: 0 15px 10px 15px;
+    padding: 8px 12px;
+    background: var(--input-bg);
+    color: var(--input-text);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.ratio-select:focus {
+    border-color: var(--logo-color);
+}

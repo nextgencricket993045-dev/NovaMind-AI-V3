@@ -11,25 +11,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     
     <style>
-        /* Strict Layout Bypasses to Prevent Buttons or Controls Squeezing */
         .bottom { display: flex !important; align-items: center !important; gap: 10px !important; padding: 15px !important; }
         .bottom input { flex: 1 !important; min-width: 0 !important; }
         .circle-btn { flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
         
-        /* Advanced Features Extra Styles */
         .msg-meta-bar { display: flex; gap: 8px; font-size: 11px; opacity: 0.6; align-items: center; justify-content: flex-end; width: 100%; margin-top: 5px; }
         .action-icon { cursor: pointer; transition: opacity 0.2s; margin-left: 5px; }
         .action-icon:hover { opacity: 1; }
         pre { background: #282c34; padding: 10px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
         code { font-family: monospace; }
         
-        /* Task Engine Navigation Control Mode Tabs */
-        .mode-tabs { display: flex; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 12px; margin: 10px 15px; gap: 5px; }
+        .mode-tabs { display: flex; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 12px; margin: 10px 15px 5px 15px; gap: 5px; }
         .dark-theme .mode-tabs { background: rgba(25px, 30px, 50px, 0.4); }
-        .tab-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; background: transparent; color: inherit; transition: 0.2s; }
+        .tab-btn { flex: 1; padding: 8px 4px; border: none; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; background: transparent; color: inherit; transition: 0.2s; }
         .tab-btn.active { background: #4f46e5; color: white; }
         
-        /* Authentication Overlay Layout Setup */
         .auth-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .auth-box { background: var(--menu-bg, #1e293b); padding: 25px; border-radius: 18px; width: 100%; max-width: 360px; color: var(--input-text, #fff); border: 1px solid var(--header-border, #334155); }
         .auth-box input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #475569; background: rgba(0,0,0,0.2); color: inherit; }
@@ -43,7 +39,7 @@
     <header class="header">
         <div class="logo">🤖 NovaMind AI</div>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <button id="pwaInstall" class="pwa-btn">📥 Install App</button>
+            <button id="pwaInstall" class="pwa-btn">📥 Install</button>
             <button id="userProfile" class="theme-btn" title="Account Access Gateway">👤</button>
             <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Audio Synthesis">🔊</button>
             <button id="themeToggle" class="theme-btn">🌙</button>
@@ -51,18 +47,25 @@
     </header>
 
     <div style="padding: 8px 15px; display: flex; gap: 5px; border-bottom: 1px solid var(--header-border);">
-        <input type="text" id="searchChatInput" placeholder="🔍 Search chat history strings, parameters, logs...">
+        <input type="text" id="searchChatInput" placeholder="🔍 Search chat history strings...">
     </div>
 
     <div class="mode-tabs">
-        <button id="mode-chat" class="tab-btn active" onclick="switchGenerationMode('chat')">💬 Smart Chat</button>
-        <button id="mode-image" class="tab-btn" onclick="switchGenerationMode('image')">🎨 Gen Image</button>
-        <button id="mode-video" class="tab-btn" onclick="switchGenerationMode('video')">🎬 Gen Video</button>
+        <button id="mode-chat" class="tab-btn active" onclick="switchGenerationMode('chat')">💬 Chat</button>
+        <button id="mode-image" class="tab-btn" onclick="switchGenerationMode('image')">🎨 Image</button>
+        <button id="mode-video" class="tab-btn" onclick="switchGenerationMode('video')">🎬 Video</button>
+        <button id="mode-audio" class="tab-btn" onclick="switchGenerationMode('audio')">🎵 Audio</button>
     </div>
+
+    <select id="aspectRatio" class="ratio-select" style="display: none;">
+        <option value="1:1">1:1 (Square)</option>
+        <option value="16:9" selected>16:9 (Landscape Cinematic)</option>
+        <option value="9:16">9:16 (Portrait Shorts)</option>
+    </select>
 
     <div id="chat" class="chat">
         <div class="message ai" data-id="system-init-welcome">
-            <div class="msg-text">Hello Ayush 👋<br><br>Welcome back! NovaMind V3 Ultra Engine is up and running. Multimedia generation interfaces, cross-file context parsers, and live database sync modules are operational.</div>
+            <div class="msg-text">Hello Ayush 👋<br><br>NovaMind V4 Interface Initialized! Ready for multiformat media and audio synthesis.</div>
         </div>
     </div>
 
@@ -80,40 +83,23 @@
     </div>
 
     <div id="attachMenu" class="attach-menu">
-        <button onclick="uploadClick('image')">📷 Image / Core Vision</button>
-        <button onclick="uploadClick('video')">📹 Video Context Clip</button>
-        <button onclick="uploadClick('pdf')">📄 PDF Documents Parse</button>
-        <button onclick="uploadClick('docx')">📁 Word Documents Parse</button>
-        <button onclick="uploadClick('txt')">📝 Code / Raw Log Strings</button>
-        <button onclick="uploadClick('xlsx')">📊 Excel Calculations Sheets</button>
-        <button onclick="uploadClick('pptx')">📉 PPT Presentations</button>
+        <button onclick="uploadClick('image')">📷 Image Core</button>
+        <button onclick="uploadClick('video')">📹 Video Context</button>
+        <button onclick="uploadClick('pdf')">📄 PDF Parse</button>
+        <button onclick="uploadClick('docx')">📁 Word Parse</button>
+        <button onclick="uploadClick('txt')">📝 Raw Logs</button>
     </div>
 
     <div class="bottom">
         <button id="attach" class="circle-btn">➕</button>
-        <input type="text" id="message" placeholder="Ask NovaMind AI or type prompt to generate..." autocomplete="off">
+        <input type="text" id="message" placeholder="Ask NovaMind AI..." autocomplete="off">
         <button id="mic" class="circle-btn">🎤</button>
         <button id="send" class="circle-btn">➤</button>
-    </div>
-
-    <button id="clear" hidden>Clear System Memory Logs</button>
-</div>
-
-<div id="authOverlay" class="auth-overlay">
-    <div class="auth-box">
-        <h3 id="authTitle" style="margin-bottom:15px;">Secure Account Cloud Core</h3>
-        <input type="email" id="authEmail" placeholder="Enter verified address email">
-        <input type="password" id="authPassword" placeholder="Enter encrypted key phrase token">
-        <button id="primaryAuthBtn">Establish Synced State</button>
-        <p id="authToggleText" style="font-size:12px; text-align:center; margin-top:12px; cursor:pointer; text-decoration:underline;">Create secondary credentials? Sign Up</p>
-        <button id="googleAuthBtn" style="background:#db4437; margin-top:10px;">🔴 Interlink via Google Auth</button>
-        <button onclick="document.getElementById('authOverlay').style.display='none'" style="background:transparent; color:inherit; border:1px solid #475569; margin-top:8px; width:100%;">Dismiss Security Gate</button>
     </div>
 </div>
 
 <script src="script.js"></script>
 <script>
-    // System Helpers Mapping
     let activeGenerationMode = "chat";
     
     function uploadClick(id) {
@@ -124,17 +110,22 @@
     function switchGenerationMode(targetMode) {
         activeGenerationMode = targetMode;
         
-        // UI Navigation feedback highlight logic loops
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(`mode-${targetMode}`).classList.add('active');
         
         const mainInput = document.getElementById("message");
+        const ratioSelect = document.getElementById("aspectRatio");
+
+        // UI Logic for Input & Format Selector
         if(targetMode === "chat") {
-            mainInput.placeholder = "Ask NovaMind Anything (Web Search / Document Engine)...";
-        } else if (targetMode === "image") {
-            mainInput.placeholder = "Describe the creative image you want to generate with Flux/DALL-E...";
-        } else if (targetMode === "video") {
-            mainInput.placeholder = "Describe cinematic scenes or animation elements to generate a video...";
+            mainInput.placeholder = "Ask NovaMind Anything...";
+            ratioSelect.style.display = "none";
+        } else if (targetMode === "image" || targetMode === "video") {
+            mainInput.placeholder = `Describe elements to generate a ${targetMode}...`;
+            ratioSelect.style.display = "block"; // Show format dropdown
+        } else if (targetMode === "audio") {
+            mainInput.placeholder = "Describe the music genre, beat, or vibe...";
+            ratioSelect.style.display = "none";
         }
     }
 </script>
