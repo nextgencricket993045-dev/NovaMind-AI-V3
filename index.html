@@ -3,128 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaMind AI V3 - Ultra Enterprise</title>
+    <title>NovaMind AI V4 - Premium Studio</title>
     <link rel="stylesheet" href="style.css">
     
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    
-    <style>
-        .bottom { display: flex !important; align-items: center !important; gap: 10px !important; padding: 15px !important; }
-        .bottom input { flex: 1 !important; min-width: 0 !important; }
-        .circle-btn { flex-shrink: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; }
-        
-        .msg-meta-bar { display: flex; gap: 8px; font-size: 11px; opacity: 0.6; align-items: center; justify-content: flex-end; width: 100%; margin-top: 5px; }
-        .action-icon { cursor: pointer; transition: opacity 0.2s; margin-left: 5px; }
-        .action-icon:hover { opacity: 1; }
-        pre { background: #282c34; padding: 10px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
-        code { font-family: monospace; }
-        
-        .mode-tabs { display: flex; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 12px; margin: 10px 15px 5px 15px; gap: 5px; }
-        .dark-theme .mode-tabs { background: rgba(25px, 30px, 50px, 0.4); }
-        .tab-btn { flex: 1; padding: 8px 4px; border: none; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; background: transparent; color: inherit; transition: 0.2s; }
-        .tab-btn.active { background: #4f46e5; color: white; }
-        
-        .auth-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .auth-box { background: var(--menu-bg, #1e293b); padding: 25px; border-radius: 18px; width: 100%; max-width: 360px; color: var(--input-text, #fff); border: 1px solid var(--header-border, #334155); }
-        .auth-box input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #475569; background: rgba(0,0,0,0.2); color: inherit; }
-        .auth-box button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; background: #4f46e5; color: #fff; font-weight: bold; cursor: pointer; }
-        .pwa-btn { background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; display: none; }
-    </style>
 </head>
 <body class="dark-theme">
 
-<div class="app">
-    <header class="header">
-        <div class="logo">🤖 NovaMind AI</div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            <button id="pwaInstall" class="pwa-btn">📥 Install</button>
-            <button id="userProfile" class="theme-btn" title="Account Access Gateway">👤</button>
-            <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Audio Synthesis">🔊</button>
-            <button id="themeToggle" class="theme-btn">🌙</button>
+<div class="app-container">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="new-chat-btn" id="newChatBtn">➕ New chat</button>
+            <button class="sidebar-toggle-btn close-btn" id="sidebarCloseBtn">✕</button>
         </div>
-    </header>
-
-    <div style="padding: 8px 15px; display: flex; gap: 5px; border-bottom: 1px solid var(--header-border);">
-        <input type="text" id="searchChatInput" placeholder="🔍 Search chat history strings...">
-    </div>
-
-    <div class="mode-tabs">
-        <button id="mode-chat" class="tab-btn active" onclick="switchGenerationMode('chat')">💬 Chat</button>
-        <button id="mode-image" class="tab-btn" onclick="switchGenerationMode('image')">🎨 Image</button>
-        <button id="mode-video" class="tab-btn" onclick="switchGenerationMode('video')">🎬 Video</button>
-        <button id="mode-audio" class="tab-btn" onclick="switchGenerationMode('audio')">🎵 Audio</button>
-    </div>
-
-    <select id="aspectRatio" class="ratio-select" style="display: none;">
-        <option value="1:1">1:1 (Square)</option>
-        <option value="16:9" selected>16:9 (Landscape Cinematic)</option>
-        <option value="9:16">9:16 (Portrait Shorts)</option>
-    </select>
-
-    <div id="chat" class="chat">
-        <div class="message ai" data-id="system-init-welcome">
-            <div class="msg-text">Hello Ayush 👋<br><br>NovaMind V4 Interface Initialized! Ready for multiformat media and audio synthesis.</div>
+        <div class="sidebar-section-title">Recent Chats</div>
+        <div class="chat-history-list" id="chatHistoryList">
+            </div>
+        <div class="sidebar-footer">
+            <button id="userProfile" class="profile-footer-btn">
+                <span class="user-avatar">👤</span>
+                <span id="footerUserLabel" class="user-label-text">Sign In / Sign Up</span>
+            </button>
         </div>
-    </div>
+    </aside>
 
-    <input type="file" id="image" accept="image/*" hidden>
-    <input type="file" id="video" accept="video/*" hidden>
-    <input type="file" id="pdf" accept=".pdf" hidden>
-    <input type="file" id="docx" accept=".doc,.docx" hidden>
-    <input type="file" id="txt" accept=".txt,.js,.py,.html,.css,.json" hidden>
-    <input type="file" id="xlsx" accept=".xlsx,.xls" hidden>
-    <input type="file" id="pptx" accept=".pptx,.ppt" hidden>
+    <main class="main-content">
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="sidebar-toggle-btn" id="sidebarOpenBtn">☰</button>
+                <div class="logo">🤖 NovaMind AI</div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Audio Synthesis">🔊</button>
+                <button id="themeToggle" class="theme-btn">🌙</button>
+            </div>
+        </header>
 
-    <div id="previewContainer" class="preview-container" style="display: none;">
-        <span id="previewName"></span>
-        <button id="cancelPreview">❌</button>
-    </div>
+        <div class="mode-tabs">
+            <button id="mode-chat" class="tab-btn active" onclick="switchGenerationMode('chat')">💬 Chat</button>
+            <button id="mode-image" class="tab-btn" onclick="switchGenerationMode('image')">🎨 Image</button>
+            <button id="mode-video" class="tab-btn" onclick="switchGenerationMode('video')">🎬 Video</button>
+            <button id="mode-audio" class="tab-btn" onclick="switchGenerationMode('audio')">🎵 Audio</button>
+        </div>
 
-    <div id="attachMenu" class="attach-menu">
-        <button onclick="uploadClick('image')">📷 Image Core</button>
-        <button onclick="uploadClick('video')">📹 Video Context</button>
-        <button onclick="uploadClick('pdf')">📄 PDF Parse</button>
-        <button onclick="uploadClick('docx')">📁 Word Parse</button>
-        <button onclick="uploadClick('txt')">📝 Raw Logs</button>
-    </div>
+        <select id="aspectRatio" class="ratio-select" style="display: none;">
+            <option value="1:1">1:1 (Square Thumbnail)</option>
+            <option value="16:9" selected>16:9 (Landscape Cinematic)</option>
+            <option value="9:16">9:16 (Portrait Shorts Layout)</option>
+        </select>
 
-    <div class="bottom">
-        <button id="attach" class="circle-btn">➕</button>
-        <input type="text" id="message" placeholder="Ask NovaMind AI..." autocomplete="off">
-        <button id="mic" class="circle-btn">🎤</button>
-        <button id="send" class="circle-btn">➤</button>
+        <div id="chat" class="chat">
+            <div class="message ai" id="msg-welcome-init">
+                <div class="msg-text">Hello Ayush 👋<br><br>NovaMind Enterprise V4 operational ecosystem. Sidebar context parsing, multiformat generation, and real-time SEO indexing models are active.</div>
+            </div>
+        </div>
+
+        <input type="file" id="image" accept="image/*" hidden>
+        <input type="file" id="video" accept="video/*" hidden>
+        <input type="file" id="pdf" accept=".pdf" hidden>
+        <input type="file" id="docx" accept=".doc,.docx" hidden>
+        <input type="file" id="txt" accept=".txt,.js,.py,.html,.css,.json" hidden>
+
+        <div id="previewContainer" class="preview-container" style="display: none;">
+            <span id="previewName"></span>
+            <button id="cancelPreview">❌</button>
+        </div>
+
+        <div id="attachMenu" class="attach-menu">
+            <button onclick="uploadClick('image')">📷 Image Input</button>
+            <button onclick="uploadClick('video')">📹 Video Clip</button>
+            <button onclick="uploadClick('pdf')">📄 PDF Matrix</button>
+            <button onclick="uploadClick('docx')">📁 Word File</button>
+            <button onclick="uploadClick('txt')">📝 Text Log Strings</button>
+        </div>
+
+        <div class="bottom">
+            <button id="attach" class="circle-btn">➕</button>
+            <input type="text" id="message" placeholder="Ask NovaMind AI..." autocomplete="off">
+            <button id="send" class="circle-btn">➤</button>
+        </div>
+    </main>
+</div>
+
+<div id="authOverlay" class="auth-page-overlay" style="display:none;">
+    <div class="auth-card">
+        <h2 id="authTitle">Welcome to NovaMind</h2>
+        <p id="authSubtitle" style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Log in or sign up with your account parameters to continue</p>
+        
+        <button id="googleAuthBtn" class="auth-btn google-btn">
+            <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/web-24dp/copy_of_web-24dp.png" width="18" alt="Google">
+            Continue with Google
+        </button>
+
+        <div class="auth-divider"><span>OR</span></div>
+
+        <div class="auth-form-group">
+            <input type="text" id="authName" placeholder="Full Name" style="display: none;">
+            <input type="email" id="authUsername" placeholder="Email address">
+            <input type="password" id="authPassword" placeholder="Password">
+        </div>
+
+        <button id="authSubmitBtn" class="auth-btn primary-submit-btn">Continue</button>
+        
+        <div class="auth-footer-toggle">
+            <span id="authSwitchPrompt">Don't have an account?</span>
+            <a href="#" id="authSwitchModeBtn">Sign up</a>
+        </div>
+
+        <button id="authCloseBtn" class="auth-btn cancel-btn">Back to Workspace</button>
     </div>
 </div>
 
 <script src="script.js"></script>
 <script>
     let activeGenerationMode = "chat";
-    
     function uploadClick(id) {
         document.getElementById(id).click();
         document.getElementById('attachMenu').classList.remove('active');
     }
-
     function switchGenerationMode(targetMode) {
         activeGenerationMode = targetMode;
-        
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(`mode-${targetMode}`).classList.add('active');
         
         const mainInput = document.getElementById("message");
         const ratioSelect = document.getElementById("aspectRatio");
 
-        // UI Logic for Input & Format Selector
         if(targetMode === "chat") {
             mainInput.placeholder = "Ask NovaMind Anything...";
             ratioSelect.style.display = "none";
         } else if (targetMode === "image" || targetMode === "video") {
-            mainInput.placeholder = `Describe elements to generate a ${targetMode}...`;
-            ratioSelect.style.display = "block"; // Show format dropdown
+            mainInput.placeholder = `Describe prompt to generate ${targetMode}...`;
+            ratioSelect.style.display = "block";
         } else if (targetMode === "audio") {
-            mainInput.placeholder = "Describe the music genre, beat, or vibe...";
+            mainInput.placeholder = "Describe music genre, beat pattern or track vibe...";
             ratioSelect.style.display = "none";
         }
     }

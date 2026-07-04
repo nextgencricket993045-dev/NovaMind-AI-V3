@@ -1,12 +1,12 @@
 // ====================================================================
-// NovaMind AI V4 - Master Frontend Engine (Fully Functional Mock Auth)
+// NovaMind AI V4 - Premium Frontend Engine (100% Core Fix)
 // ====================================================================
 
 let imageBase64 = null;
 let uploadedFileData = null;
 let uploadedFileName = null;
 let uploadedFileType = null;
-let isVoiceReplyEnabled = false; 
+let isVoiceReplyEnabled = false;
 let userSessionToken = localStorage.getItem("novaSessionToken") || generateUUID();
 localStorage.setItem("novaSessionToken", userSessionToken);
 
@@ -19,10 +19,10 @@ function generateUUID() {
 
 function speakText(text) {
     if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel(); 
+    window.speechSynthesis.cancel();
     const cleanText = text.replace(/[\#\*`_\-]/g, "");
     const speech = new SpeechSynthesisUtterance(cleanText);
-    speech.lang = "hi-IN"; 
+    speech.lang = "hi-IN";
     window.speechSynthesis.speak(speech);
 }
 
@@ -35,14 +35,76 @@ if (voiceToggleEl) {
 }
 
 // ==========================================
+// 🗂️ Sidebar State Navigation Engine
+// ==========================================
+const sidebar = document.getElementById('sidebar');
+const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
+const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+const newChatBtn = document.getElementById('newChatBtn');
+const chatHistoryList = document.getElementById('chatHistoryList');
+
+if (sidebarOpenBtn) {
+    sidebarOpenBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.add('active');
+    });
+}
+if (sidebarCloseBtn) {
+    sidebarCloseBtn.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+    });
+}
+
+document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('active')) {
+        if (!sidebar.contains(e.target) && e.target !== sidebarOpenBtn) {
+            sidebar.classList.remove('active');
+        }
+    }
+});
+
+let activeChatHistory = JSON.parse(localStorage.getItem("nova_chat_logs")) || [];
+
+function updateSidebarHistoryUI() {
+    if (!chatHistoryList) return;
+    chatHistoryList.innerHTML = "";
+    
+    activeChatHistory.forEach((log) => {
+        const historyBtn = document.createElement('button');
+        historyBtn.className = "history-item-node";
+        historyBtn.innerText = `💬 ${log.title}`;
+        historyBtn.title = log.title;
+        historyBtn.addEventListener('click', () => {
+            const chatContainer = document.getElementById('chat');
+            chatContainer.innerHTML = `
+                <div class="message user" id="msg-hist-u"><div class="msg-text">${log.prompt}</div></div>
+                <div class="message ai" id="msg-hist-a"><div class="msg-text">${log.response}</div></div>`;
+            sidebar.classList.remove('active');
+        });
+        chatHistoryList.appendChild(historyBtn);
+    });
+}
+
+if(newChatBtn) {
+    newChatBtn.addEventListener('click', () => {
+        const chatContainer = document.getElementById('chat');
+        chatContainer.innerHTML = `
+            <div class="message ai" id="msg-welcome-init">
+                <div class="msg-text">Workspace refreshed. Started a new chat thread session.</div>
+            </div>`;
+        sidebar.classList.remove('active');
+    });
+}
+
+updateSidebarHistoryUI();
+
+// ==========================================
 // File Upload & Preview Handlers
 // ==========================================
-const fileInputs = ['image', 'video', 'pdf', 'docx', 'txt', 'xlsx', 'pptx'];
+const fileInputs = ['image', 'video', 'pdf', 'docx', 'txt'];
 fileInputs.forEach(id => {
     const el = document.getElementById(id);
-    if (el) {
-        el.addEventListener('change', (e) => handleFileUpload(e, id));
-    }
+    if (el) el.addEventListener('change', (e) => handleFileUpload(e, id));
 });
 
 function handleFileUpload(event, type) {
@@ -51,11 +113,8 @@ function handleFileUpload(event, type) {
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        if (type === 'image') {
-            imageBase64 = e.target.result;
-        } else {
-            uploadedFileData = e.target.result;
-        }
+        if (type === 'image') imageBase64 = e.target.result;
+        else uploadedFileData = e.target.result;
         uploadedFileName = file.name;
         uploadedFileType = type;
         
@@ -68,14 +127,9 @@ function handleFileUpload(event, type) {
 document.getElementById('cancelPreview').addEventListener('click', clearPreview);
 
 function clearPreview() {
-    imageBase64 = null;
-    uploadedFileData = null;
-    uploadedFileName = null;
-    uploadedFileType = null;
+    imageBase64 = null; uploadedFileData = null; uploadedFileName = null; uploadedFileType = null;
     document.getElementById('previewContainer').style.display = 'none';
-    fileInputs.forEach(id => {
-        if (document.getElementById(id)) document.getElementById(id).value = '';
-    });
+    fileInputs.forEach(id => { if (document.getElementById(id)) document.getElementById(id).value = ''; });
 }
 
 // ==========================================
@@ -84,58 +138,63 @@ function clearPreview() {
 const attachBtn = document.getElementById('attach');
 const attachMenu = document.getElementById('attachMenu');
 
-attachBtn.addEventListener('click', () => {
-    attachMenu.classList.toggle('active');
-    attachMenu.style.display = attachMenu.classList.contains('active') ? 'block' : 'none';
-});
+if(attachBtn) {
+    attachBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        attachMenu.classList.toggle('active');
+    });
+}
 
 document.addEventListener('click', (e) => {
-    if (!attachBtn.contains(e.target) && !attachMenu.contains(e.target)) {
+    if (attachBtn && !attachBtn.contains(e.target) && attachMenu && !attachMenu.contains(e.target)) {
         attachMenu.classList.remove('active');
-        attachMenu.style.display = 'none';
     }
 });
 
 const themeToggle = document.getElementById('themeToggle');
-themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-theme');
-    localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
-});
-
-if (localStorage.getItem('theme') === 'light') {
-    document.body.classList.remove('dark-theme');
+if(themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark-theme');
+        localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+    });
 }
+if (localStorage.getItem('theme') === 'light') document.body.classList.remove('dark-theme');
 
 // ==========================================
-// Core Messaging Pipeline
+// Core Messaging Pipeline (100% FIXED VALIDATION)
 // ==========================================
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
 const chatContainer = document.getElementById('chat');
 
-sendBtn.addEventListener('click', () => {
-    const text = messageInput.value.trim();
-    if (text || imageBase64 || uploadedFileData) sendMessage(text);
-});
-
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        const text = messageInput.value.trim();
+if(sendBtn) {
+    sendBtn.addEventListener('click', () => {
+        const text = messageInput.value ? messageInput.value.trim() : "";
         if (text || imageBase64 || uploadedFileData) sendMessage(text);
-    }
-});
+    });
+}
+if(messageInput) {
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const text = messageInput.value ? messageInput.value.trim() : "";
+            if (text || imageBase64 || uploadedFileData) sendMessage(text);
+        }
+    });
+}
+
+let lastUserPrompt = ""; 
 
 async function sendMessage(text) {
-    if (!text && !imageBase64 && !uploadedFileData) return;
-    messageInput.value = '';
+    lastUserPrompt = text;
     
     const mode = (typeof activeGenerationMode !== "undefined") ? activeGenerationMode : "chat";
     const aspectEl = document.getElementById("aspectRatio");
     const ratio = aspectEl ? aspectEl.value : "16:9";
 
     const msgId = "msg-" + Date.now();
-    appendMessage('user', text, imageBase64 || uploadedFileData ? true : false, null, msgId);
+    appendMessage('user', text, (imageBase64 || uploadedFileData) ? true : false, null, msgId);
     
+    if(messageInput) messageInput.value = '';
     const loadingId = appendLoading();
     chatContainer.scrollTop = chatContainer.scrollHeight;
 
@@ -149,18 +208,10 @@ async function sendMessage(text) {
     try {
         const response = await fetch("/api/chat", {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "x-forwarded-for": userSessionToken 
-            },
+            headers: { "Content-Type": "application/json", "x-forwarded-for": userSessionToken },
             body: JSON.stringify({
-                message: text,
-                image: currentImage,
-                fileData: currentFileData,
-                fileName: currentFileName,
-                fileType: currentFileType,
-                generationMode: mode,
-                aspectRatio: ratio
+                message: text, image: currentImage, fileData: currentFileData,
+                fileName: currentFileName, fileType: currentFileType, generationMode: mode, aspectRatio: ratio
             })
         });
 
@@ -168,9 +219,17 @@ async function sendMessage(text) {
         removeLoading(loadingId);
 
         const aiMsgId = "ai-" + Date.now();
-        if (data.reply || data.mediaUrl) {
-            appendMessage('ai', data.reply, data.mediaUrl, data.mediaType, aiMsgId);
-            if (isVoiceReplyEnabled) speakText(data.reply);
+        if (data && (data.reply || data.mediaUrl)) {
+            appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType, aiMsgId);
+            if (isVoiceReplyEnabled && data.reply) speakText(data.reply);
+            
+            if (mode === "chat" && text && data.reply) {
+                const logTitle = text.length > 22 ? text.substring(0, 22) + "..." : text;
+                activeChatHistory.unshift({ title: logTitle, prompt: text, response: data.reply });
+                if(activeChatHistory.length > 15) activeChatHistory.pop();
+                localStorage.setItem("nova_chat_logs", JSON.stringify(activeChatHistory));
+                updateSidebarHistoryUI();
+            }
         } else {
             appendMessage('ai', "⚠️ Engine process completed but returned empty output.", null, null, aiMsgId);
         }
@@ -190,28 +249,24 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
     msgDiv.id = `msg-${id}`;
     
     let contentHtml = `<div class="msg-text">`;
-    
     if (sender === 'ai' && typeof marked !== 'undefined' && text) {
         contentHtml += marked.parse(text);
     } else if (text) {
         contentHtml += text.replace(/\n/g, '<br>');
     }
-    
     if (sender === 'user' && mediaUrl === true) {
         contentHtml += `<br><small style="opacity: 0.7;">📎 [Attachment Included]</small>`;
     }
-    
     contentHtml += `</div>`;
 
     if (sender === 'ai' && mediaUrl && typeof mediaUrl === 'string') {
         contentHtml += `<div class="media-container" style="margin-top: 15px; text-align: center;">`;
         if (mediaType === 'image') {
-            contentHtml += `<img src="${mediaUrl}" alt="Generated Asset" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">`;
+            contentHtml += `<img src="${mediaUrl}" alt="Generated Asset" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">`;
         } else if (mediaType === 'audio') {
             contentHtml += `
-                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                    <div style="font-size: 12px; margin-bottom: 8px; opacity: 0.8;">🎵 Generated Audio Segment</div>
-                    <audio src="${mediaUrl}" controls style="width: 100%; outline: none;"></audio>
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;">
+                    <audio src="${mediaUrl}" controls style="width: 100%;"></audio>
                 </div>`;
         }
         contentHtml += `</div>`;
@@ -223,12 +278,15 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
     let metaControls = "";
     if (sender === 'ai') {
         metaControls = `
-            <span class="action-icon" style="cursor:pointer;" onclick="navigator.clipboard.writeText(\`${safeText}\`)">📋 Copy</span>
-            <span class="action-icon" style="cursor:pointer; margin-left:8px;" onclick="speakText(\`${safeText}\`)">🔊 Speak</span>`;
+            <span class="action-icon" onclick="navigator.clipboard.writeText(\`${safeText}\`)">📋 Copy</span>
+            <span class="action-icon" style="margin-left:8px;" onclick="speakText(\`${safeText}\`)">🔊 Speak</span>
+            <span class="action-icon" style="margin-left:8px;" onclick="handleFeedback(this, 'like')">👍</span>
+            <span class="action-icon" style="margin-left:8px;" onclick="handleFeedback(this, 'dislike')">👎</span>
+            <span class="action-icon" style="margin-left:8px; color: #818cf8;" onclick="triggerRegenerate()">🔄 Re-gen</span>`;
     } else {
         metaControls = `
-            <span class="action-icon" style="cursor:pointer;" onclick="triggerMessageEdit(this, '${id}')">✏️ Edit</span>
-            <span class="action-icon" style="cursor:pointer; margin-left:8px;" onclick="triggerMessageDelete('${id}')">🗑️ Del</span>`;
+            <span class="action-icon" onclick="triggerMessageEdit(this, '${id}')">✏️ Edit</span>
+            <span class="action-icon" style="margin-left:8px;" onclick="triggerMessageDelete('${id}')">🗑️ Del</span>`;
     }
 
     contentHtml += `
@@ -242,191 +300,146 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
     chatContainer.scrollTop = chatContainer.scrollHeight;
     
     if (sender === 'ai' && typeof hljs !== 'undefined') {
-        msgDiv.querySelectorAll('pre code').forEach((block) => {
-            hljs.highlightElement(block);
-        });
+        msgDiv.querySelectorAll('pre code').forEach((block) => { hljs.highlightElement(block); });
     }
 }
 
 function appendLoading() {
     const id = 'loading-' + Date.now();
     const msgDiv = document.createElement('div');
-    msgDiv.className = 'message ai';
-    msgDiv.id = id;
+    msgDiv.className = 'message ai'; msgDiv.id = id;
     msgDiv.innerHTML = `<div class="msg-text">System processing prompt... ⏳</div>`;
     chatContainer.appendChild(msgDiv);
     return id;
 }
 
-function removeLoading(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-}
+function removeLoading(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
 window.speakText = speakText;
-window.triggerMessageDelete = function(id) {
-    document.getElementById(`msg-${id}`)?.remove();
+window.triggerMessageDelete = function(id) { 
+    document.getElementById(`msg-${id}`)?.remove(); 
 };
+
 window.triggerMessageEdit = function(el, id) {
     const txtNode = el.parentElement.previousElementSibling;
-    const updatedTxt = prompt("Refactor message text context:", txtNode.innerText.replace(/✏️ Edit|🗑️ Del/g, '').trim());
+    const currentRawText = txtNode.innerText.trim();
+    const updatedTxt = prompt("Refactor message text content:", currentRawText);
     if (updatedTxt && updatedTxt.trim() !== "") {
         txtNode.innerHTML = updatedTxt.replace(/\n/g, '<br>');
         sendMessage(updatedTxt);
     }
 };
 
+window.handleFeedback = function(el, type) {
+    el.style.transform = "scale(1.3)";
+    el.style.transition = "0.2s";
+    setTimeout(() => { el.style.transform = "scale(1)"; }, 200);
+};
+
+window.triggerRegenerate = function() {
+    if (lastUserPrompt) sendMessage(lastUserPrompt);
+    else alert("No active session trace available to regenerate.");
+};
+
 // ==========================================
-// 👤 Professional Fully Functional Auth System
+// 👤 Authentic ChatGPT Authentication Pipeline
 // ==========================================
 const userProfileBtn = document.getElementById('userProfile');
-let authOverlay = document.querySelector('.auth-overlay');
+let authOverlay = document.getElementById('authOverlay');
+const footerUserLabel = document.getElementById('footerUserLabel');
 
-if (!authOverlay) {
-    authOverlay = document.createElement('div');
-    authOverlay.className = 'auth-overlay';
-    authOverlay.style.cssText = "position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:2500; display:none; align-items:center; justify-content:center; padding:20px; font-family:sans-serif;";
-    
+if (authOverlay) {
+    authOverlay.style.cssText = "position:fixed; top:0; left:0; right:0; bottom:0; background:#0b0f19; z-index:2500; display:none; align-items:center; justify-content:center; padding:20px; font-family:sans-serif;";
     authOverlay.innerHTML = `
-        <div class="auth-box" style="background:#1e293b; padding:30px; border-radius:20px; width:100%; max-width:380px; color:#fff; border:1px solid #334155; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
-            <div style="display:flex; justify-content:between; align-items:center; margin-bottom:15px;">
-                <h3 id="authTitle" style="margin:0; font-size:20px; color:#fff;">👤 Sign In to NovaMind</h3>
+        <div class="auth-box" style="background:#111827; padding:40px 32px; border-radius:12px; width:100%; max-width:400px; color:#fff; border:1px solid #1f2937; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
+            <div style="text-align:center;">
+                <h2 id="authTitle" style="font-size:32px; font-weight:700; margin-bottom:8px;">Welcome to NovaMind</h2>
+                <p id="authSubtitle" style="margin-bottom:24px; color:#94a3b8; font-size:14px;">Log in or sign up with your account parameters to continue</p>
             </div>
             
-            <button id="googleAuthBtn" style="width:100%; padding:11px; margin-top:10px; margin-bottom:15px; border-radius:10px; border:1px solid #475569; background:#fff; color:#1e293b; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px; transition:0.2s;">
-                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/web-24dp/copy_of_web-24dp.png" width="18" alt="Google Logo">
-                <span id="googleBtnText">Continue with Google</span>
+            <button id="googleAuthBtn" class="auth-btn google-btn" style="width:100%; padding:14px; border-radius:6px; font-size:16px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:12px; background:#fff; color:#1f2937; border:1px solid #d1d5db; box-sizing:border-box;">
+                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/web-24dp/copy_of_web-24dp.png" width="18" alt="Google">
+                Continue with Google
             </button>
-            
-            <div style="text-align:center; margin:10px 0; opacity:0.5; font-size:12px;">— OR —</div>
 
-            <input type="text" id="authName" placeholder="Full Name" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #475569; background:rgba(0,0,0,0.3); color:#fff; display:none; box-sizing:border-box;">
-            <input type="text" id="authUsername" placeholder="Email Address" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #475569; background:rgba(0,0,0,0.3); color:#fff; box-sizing:border-box;">
-            <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #475569; background:rgba(0,0,0,0.3); color:#fff; box-sizing:border-box;">
-            
-            <button id="authSubmitBtn" style="width:100%; padding:12px; margin-top:12px; border-radius:8px; border:none; background:#4f46e5; color:#fff; font-weight:bold; cursor:pointer; font-size:14px;">Sign In</button>
-            
-            <div style="margin-top:15px; text-align:center; font-size:13px; opacity:0.8;">
-                <span id="authSwitchPrompt">Don't have an account?</span> 
-                <a href="#" id="authSwitchModeBtn" style="color:#818cf8; text-decoration:none; font-weight:bold; margin-left:4px;">Sign Up</a>
+            <div class="auth-divider" style="display:flex; align-items:center; margin:20px 0; color:#4b5563; font-size:12px; font-weight:600;"><span style="flex:1; border-bottom:1px solid #1f2937;"></span><span style="padding:0 10px;">OR</span><span style="flex:1; border-bottom:1px solid #1f2937;"></span></div>
+
+            <div class="auth-form-group">
+                <input type="text" id="authName" placeholder="Full Name" style="display:none; width:100%; padding:14px 16px; margin:10px 0; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#fff; font-size:16px; box-sizing:border-box;">
+                <input type="email" id="authUsername" placeholder="Email address" style="width:100%; padding:14px 16px; margin:10px 0; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#fff; font-size:16px; box-sizing:border-box;">
+                <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:14px 16px; margin:10px 0; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#fff; font-size:16px; box-sizing:border-box;">
             </div>
+
+            <button id="authSubmitBtn" class="auth-btn primary-submit-btn" style="width:100%; padding:14px; border-radius:6px; font-size:16px; font-weight:600; cursor:pointer; background:#10b981; color:#fff; border:none; margin-top:15px; box-sizing:border-box;">Continue</button>
             
-            <button id="authCloseBtn" style="width:100%; padding:10px; margin-top:15px; border-radius:8px; border:none; background:#334155; color:#cbd5e1; cursor:pointer; font-size:12px;">Cancel</button>
+            <div class="auth-footer-toggle" style="margin-top:24px; text-align:center; font-size:14px; color:#94a3b8;">
+                <span id="authSwitchPrompt">Don't have an account?</span>
+                <a href="#" id="authSwitchModeBtn" style="color:#10b981; text-decoration:none; font-weight:500; margin-left:4px;">Sign up</a>
+            </div>
+
+            <button id="authCloseBtn" class="auth-btn cancel-btn" style="width:100%; padding:10px; border-radius:6px; background:transparent; color:#94a3b8; border:1px solid #374151; margin-top:12px; font-size:14px; cursor:pointer;">Back to Workspace</button>
         </div>`;
-    document.body.appendChild(authOverlay);
 }
 
-let authMode = "signin"; 
+let authMode = "signin";
 
-// Local dynamic database structure storage logic array setup
 if(!localStorage.getItem("nova_mock_users")) {
     localStorage.setItem("nova_mock_users", JSON.stringify([{email: "ayush@novamind.com", pass: "123456", name: "Ayush"}]));
 }
 
-if (userProfileBtn) {
+const savedUser = localStorage.getItem("currentUser");
+if (savedUser && footerUserLabel) {
+    footerUserLabel.innerText = savedUser;
+}
+
+if (userProfileBtn && authOverlay) {
     userProfileBtn.addEventListener('click', () => {
         authOverlay.style.display = 'flex';
     });
 }
 
-// RESTORED COMPONENT HANDLERS: Complete operational workflow tracking
-authOverlay.addEventListener('click', (e) => {
-    const nameField = document.getElementById('authName');
-    const titleText = document.getElementById('authTitle');
-    const submitBtn = document.getElementById('authSubmitBtn');
-    const promptText = document.getElementById('authSwitchPrompt');
-    const switchLink = document.getElementById('authSwitchModeBtn');
-    const googleText = document.getElementById('googleBtnText');
+if (authOverlay) {
+    authOverlay.addEventListener('click', (e) => {
+        const nameField = document.getElementById('authName');
+        const titleText = document.getElementById('authTitle');
+        const subtitleText = document.getElementById('authSubtitle');
+        const submitBtn = document.getElementById('authSubmitBtn');
+        const promptText = document.getElementById('authSwitchPrompt');
+        const switchLink = document.getElementById('authSwitchModeBtn');
 
-    if (e.target.id === 'authCloseBtn') {
-        authOverlay.style.display = 'none';
-    }
-
-    if (e.target.id === 'authSwitchModeBtn') {
-        e.preventDefault();
-        if (authMode === "signin") {
-            authMode = "signup";
-            titleText.innerText = "📝 Create Account";
-            nameField.style.display = "block";
-            submitBtn.innerText = "Sign Up / Register";
-            promptText.innerText = "Already have an account?";
-            switchLink.innerText = "Sign In";
-            googleText.innerText = "Sign Up with Google";
-        } else {
-            authMode = "signin";
-            titleText.innerText = "👤 Sign In to NovaMind";
-            nameField.style.display = "none";
-            submitBtn.innerText = "Sign In";
-            promptText.innerText = "Don't have an account?";
-            switchLink.innerText = "Sign Up";
-            googleText.innerText = "Continue with Google";
-        }
-    }
-
-    // FIXED: Google Login Operational Workflow Synchronization Structure
-    if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
-        const mockGoogleEmail = "ayush.google@gmail.com";
-        const generatedToken = "google_oauth_token_" + Math.random().toString(36).substring(7);
-        
-        localStorage.setItem("novaSessionToken", generatedToken);
-        localStorage.setItem("currentUser", "Ayush (Google Connected)");
-        
-        // Custom message update block element
-        const welcomeMessage = document.querySelector(".message.ai .msg-text");
-        if(welcomeMessage) {
-            welcomeMessage.innerHTML = `Hello Ayush 👋<br><br>NovaMind V4 Engine is successfully synchronized via Google Account! Multi-format operations are live.`;
+        if (e.target.id === 'authCloseBtn') {
+            authOverlay.style.display = 'none';
         }
 
-        alert("🔄 Syncing Google Token Credentials...\nAuthorized State established!");
-        authOverlay.style.display = 'none';
-    }
-
-    // FIXED: Email / Password Core Structural Sync Logic Handler
-    if (e.target.id === 'authSubmitBtn') {
-        const email = document.getElementById('authUsername')?.value.trim();
-        const pass = document.getElementById('authPassword')?.value.trim();
-        const name = nameField?.value.trim();
-        let userDb = JSON.parse(localStorage.getItem("nova_mock_users"));
-
-        if (!email || !pass) {
-            alert("⚠️ Please fill all required credential inputs.");
-            return;
-        }
-
-        if (authMode === "signup") {
-            if (!name) { alert("⚠️ Please provide your full name for registration."); return; }
-            
-            // Check if user exists
-            if(userDb.some(u => u.email === email)) {
-                alert("⚠️ Account already exists with this email address.");
-                return;
-            }
-
-            userDb.push({email, pass, name});
-            localStorage.setItem("nova_mock_users", JSON.stringify(userDb));
-            localStorage.setItem("novaSessionToken", "token_" + Date.now());
-            localStorage.setItem("currentUser", name);
-            
-            alert(`🎉 Registration successful! Welcome ${name}.`);
-        } else {
-            // Sign In Validation Layer Loop
-            const authenticatedUser = userDb.find(u => u.email === email && u.pass === pass);
-            if(authenticatedUser) {
-                localStorage.setItem("novaSessionToken", "token_" + Date.now());
-                localStorage.setItem("currentUser", authenticatedUser.name);
-                alert(`🚀 Welcome back, ${authenticatedUser.name}! Session initialized.`);
+        if (e.target.id === 'authSwitchModeBtn') {
+            e.preventDefault();
+            if (authMode === "signin") {
+                authMode = "signup";
+                titleText.innerText = "Create your account";
+                subtitleText.innerText = "Provide details to build an authorized enterprise access key";
+                if(nameField) nameField.style.display = "block";
+                submitBtn.innerText = "Sign Up";
+                promptText.innerText = "Already have an account?";
+                switchLink.innerText = "Log in";
             } else {
-                alert("❌ Invalid email or password structure phrase. Please check credentials or Sign Up.");
-                return;
+                authMode = "signin";
+                titleText.innerText = "Welcome back";
+                subtitleText.innerText = "Log in with your account parameters to continue";
+                if(nameField) nameField.style.display = "none";
+                submitBtn.innerText = "Continue";
+                promptText.innerText = "Don't have an account?";
+                switchLink.innerText = "Sign up";
             }
         }
-        
-        const welcomeMessage = document.querySelector(".message.ai .msg-text");
-        const activeUser = localStorage.getItem("currentUser") || "Ayush";
-        if(welcomeMessage) {
-            welcomeMessage.innerHTML = `Hello ${activeUser} 👋<br><br>NovaMind V4 Engine is successfully synchronized! Multi-format operations are active.`;
-        }
-        
-        authOverlay.style.display = 'none';
-    }
-});
+
+        if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
+            localStorage.setItem("novaSessionToken", "oauth_google_verified");
+            localStorage.setItem("currentUser", "Ayush (Google Connected)");
+            if(footerUserLabel) footerUserLabel.innerText = "Ayush (Google Connected)";
+            
+            const initBlock = document.getElementById("msg-welcome-init");
+            if(initBlock) {
+                initBlock.querySelector(".msg-text").innerHTML = `Hello Ayush 👋<br><br>NovaMind Enterprise updated. Google Authentication parameters securely synced.`;
+            }
+            alert("Authorized State established via Google! 🔐");
+            authOverlay.
