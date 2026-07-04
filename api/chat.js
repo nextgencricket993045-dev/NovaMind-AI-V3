@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V3 - Ultimate Multi-Engine Backend Node (Fixed Routing)
+// NovaMind AI V3 - Ultimate Multi-Engine Backend Node (Dynamic Media)
 // ====================================================================
 
 const chatMemory = {};
@@ -34,7 +34,6 @@ export default async function handler(req, res) {
     let systemContextLayer = "";
     const payloadParts = [];
 
-    // Video/Image analysis handling layers
     if (requestBody.fileType === "video" && requestBody.fileData) {
         const match = requestBody.fileData.match(/^data:(video\/[a-zA-Z0-9.+-]+);base64,(.*)$/);
         if (match) payloadParts.push({ inlineData: { mimeType: match[1], data: match[2] } });
@@ -52,11 +51,10 @@ export default async function handler(req, res) {
         computedUserPrompt = `${systemContextLayer}\n\nInstruction: ${computedUserPrompt}`;
     }
 
-    // STRICT GENERATION MODE INSTRUCTIONS (Forces English/Hindi output always)
     if (currentMode === "image") {
-        computedUserPrompt = `[CRITICAL DIRECTIVE: The user wants to generate an IMAGE for the prompt: "${originalUserMessage}". Do NOT write long structural design explanations in French. Briefly describe the visual aesthetic of the generated image in 2-3 clean sentences in English/Hindi and confirm it is ready below.]`;
+        computedUserPrompt = `[CRITICAL DIRECTIVE: The user wants to generate an IMAGE for the prompt: "${originalUserMessage}". Briefly describe the visual layout of this specific request in 2 sentences in English/Hindi and confirm it below.]`;
     } else if (currentMode === "video") {
-        computedUserPrompt = `[CRITICAL DIRECTIVE: The user wants to generate a VIDEO for the prompt: "${originalUserMessage}". Do NOT write timeline tables in French. Briefly describe the cinematic video output clip rendering in 2-3 clear sentences in English/Hindi and confirm it is ready below.]`;
+        computedUserPrompt = `[CRITICAL DIRECTIVE: The user wants to generate a VIDEO for the prompt: "${originalUserMessage}". Briefly describe the cinematic clip in 2 sentences in English/Hindi and confirm it below.]`;
     }
 
     if (computedUserPrompt.trim() !== "") payloadParts.push({ text: computedUserPrompt });
@@ -69,7 +67,7 @@ export default async function handler(req, res) {
     const structuralInstructions = [
         {
             role: "user",
-            parts: [{ text: `You are NovaMind AI Ultra Enterprise running in 2026. Always respond naturally in English or Hindi (or mix). Avoid any sudden switch to French or technical markup logs in raw prose.` }]
+            parts: [{ text: `You are NovaMind AI Ultra Enterprise running in 2026. Always respond naturally in English or Hindi (or mix).` }]
         },
         ...chatMemory[clientInstanceToken],
         { role: "user", parts: payloadParts }
@@ -81,7 +79,7 @@ export default async function handler(req, res) {
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: structuralInstructions, generationConfig: { temperature: 0.5, maxOutputTokens: 1000 } })
+                body: JSON.stringify({ contents: structuralInstructions, generationConfig: { temperature: 0.5, maxOutputTokens: 500 } })
             }
         );
 
@@ -91,12 +89,11 @@ export default async function handler(req, res) {
         let finalMediaUrl = null;
         let finalMediaType = null;
 
-        // Dynamic Source keyword injection filters for live rendering simulation maps
         if (currentMode === "image") {
             finalMediaType = "image";
-            const cleanQuery = encodeURIComponent(originalUserMessage.replace(/[^a-zA-Z0-9 ]/g, ""));
-            // High fidelity image rendering simulator link mapping direct keywords
-            finalMediaUrl = `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop&sig=${cleanQuery || "nova"}`; 
+            // FIXED: Clean keywords filter to match user prompt directly with Unsplash Live Source Engine
+            const keywords = originalUserMessage.replace(/[^a-zA-Z0-9 ]/g, "").trim().replace(/\s+/g, ",");
+            finalMediaUrl = `https://images.unsplash.com/featured/?${keywords || "nature"}`; 
         } else if (currentMode === "video") {
             finalMediaType = "video";
             finalMediaUrl = `https://assets.mixkit.co/videos/preview/mixkit-abstract-laser-lights-background-42358-large.mp4`; 
