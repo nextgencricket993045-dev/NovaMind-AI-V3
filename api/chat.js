@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Clean Production Backend (No Fallback Text)
+// NovaMind AI V4 - Master Production Backend (Internet Search Agent)
 // ====================================================================
 
 export default async function handler(req, res) {
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const cleanPrompt = encodeURIComponent((message || "creative design").replace(/[^a-zA-Z0-9 ]/g, "").trim());
     const randomSeed = Math.floor(Math.random() * 1000000);
 
-    // Multiformat Asset Pipeline (Pollinations AI - Independent of Google Quota)
+    // Multiformat Asset Pipeline (Pollinations AI)
     if (generationMode === "image") {
         finalMediaType = "image";
         finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=${resWidth}&height=${resHeight}&seed=${randomSeed}&enhance=true`;
@@ -38,39 +38,47 @@ export default async function handler(req, res) {
         finalMediaUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=${cleanPrompt}%20music%20segment`;
     }
 
-    // Strict System Optimization Context Injection
-    let optimizedPrompt = message || "Hello";
+    // System Orchestration & Growth Context Blueprint
+    let requestBody = {
+        contents: [{ parts: [{ text: message || "Hello" }] }]
+    };
+
     if (generationMode === "chat") {
-        optimizedPrompt = `[SYSTEM CORE OPTIMIZATION: Act as an elite content developer and optimization expert. If the user mentions any video concept, story idea, script request, or channel strategy, you must answer creatively and ALWAYS append a structured '📊 DISCOVERABILITY & SEO METRICS' block at the bottom containing: 3 High-CTR Titles, 10 optimized search tags comma-separated, and 5 viral hashtags. Keep your tone direct, in English/Hindi mix.]\n\nUser Input: ${message}`;
+        // Advanced Content Creator Prompt with Tools Config
+        requestBody = {
+            contents: [{ parts: [{ text: message || "Hello" }] }],
+            // 🌐 CRITICAL: Enable Live Google Search Grounding Tool
+            tools: [{ googleSearch: {} }],
+            systemInstruction: {
+                parts: [{
+                    text: "You are NovaMind AI V4, an elite AI Agent and content developer expert. If the user mentions any video concept, story idea, script request, current news, or channel strategy, use the google search tool to fetch real-time fresh facts. ALWAYS append a structured '📊 DISCOVERABILITY & SEO METRICS' block at the bottom containing: 3 High-CTR Titles, 10 optimized search tags comma-separated, and 5 viral hashtags. Keep your tone direct, in English/Hindi mix."
+                }]
+            }
+        };
     }
 
     try {
+        // Using stable v1beta API endpoint for advanced tools configuration
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: optimizedPrompt }] }]
-            })
+            body: JSON.stringify(requestBody)
         });
 
         const data = await response.json();
 
-        // If Google Quota Exceeded, show direct standard warning message
         if (data.error) {
-            return res.status(200).json({ 
-                reply: `⚠️ Google API Error: ${data.error.message}`, 
-                mediaUrl: finalMediaUrl, 
-                mediaType: finalMediaType 
-            });
+            return res.status(200).json({ reply: `⚠️ Google API Error: ${data.error.message}` });
         }
 
-        let reply = "Processing complete.";
+        let reply = "Processing complete, par AI ne kuch nahi likha.";
+        
         if (data.candidates && data.candidates.length > 0) {
             const candidate = data.candidates[0];
             if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0) {
                 reply = candidate.content.parts[0].text;
             } else if (candidate.finishReason) {
-                reply = `⚠️ Response Blocked by Google Safety. Reason: ${candidate.finishReason}`;
+                reply = `⚠️ Blocked by Google Safety Filter. Reason: ${candidate.finishReason}`;
             }
         }
 
@@ -81,10 +89,6 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        return res.status(200).json({ 
-            reply: `⚠️ Server Connection Error: ${error.message}`, 
-            mediaUrl: finalMediaUrl, 
-            mediaType: finalMediaType 
-        });
+        return res.status(200).json({ reply: `⚠️ Server Connection Crash: ${error.message}` });
     }
 }
