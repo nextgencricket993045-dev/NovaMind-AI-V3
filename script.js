@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Premium Stable Core Script Engine (Absolute Final)
+// NovaMind AI V4 - Premium Stable Core Script Engine (All Features Fixed)
 // ====================================================================
 
 let imageBase64 = null;
@@ -201,7 +201,10 @@ async function sendMessage(text) {
     const ratio = document.getElementById("aspectRatio") ? document.getElementById("aspectRatio").value : "16:9";
 
     const displayPrompt = text || `Uploaded Asset file: [${uploadedFileName}]`;
-    appendMessage('user', displayPrompt);
+    
+    // Dynamic distinct user ID generated for target alignment
+    const userMsgId = "user-" + Date.now();
+    appendMessage('user', displayPrompt, null, null, userMsgId);
     if(messageInput) messageInput.value = '';
     
     const loadingId = appendLoading();
@@ -219,7 +222,6 @@ async function sendMessage(text) {
             body: JSON.stringify(payload)
         });
 
-        // 🛡️ FRONTEND EXCEPTION GUARD: If server breaks text syntax, safely evaluate into explicit response
         const contentType = response.headers.get("content-type");
         let data;
         if (contentType && contentType.includes("application/json")) {
@@ -232,7 +234,8 @@ async function sendMessage(text) {
         removeLoading(loadingId);
 
         if (data && (data.reply || data.mediaUrl)) {
-            appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType);
+            const aiMsgId = "ai-" + Date.now();
+            appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType, aiMsgId);
             if (isVoiceReplyEnabled && data.reply) speakText(data.reply);
             
             if (mode === "chat" && data.reply && !data.reply.startsWith("⚠️")) {
@@ -246,14 +249,15 @@ async function sendMessage(text) {
         }
     } catch (error) {
         removeLoading(loadingId);
-        appendMessage('ai', `⚠️ Synchronization Interrupt: ${error.message}`);
+        appendMessage('ai', `⚠️ Synchronization Interrupt: ${error.message}`, null, null, "err-" + Date.now());
     }
 }
 
-function appendMessage(sender, text, mediaUrl = null, mediaType = null) {
+// 💬 RE-BUILT AND FULLY IMMUTABLE DOM RENDER MATRIX WITH CONTROLS TRACE
+function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "") {
     const div = document.createElement('div');
-    const id = Date.now();
-    div.className = `message ${sender}`; div.id = `msg-${id}`;
+    div.className = `message ${sender}`; 
+    div.id = `msg-${id}`;
     
     let html = `<div class="msg-text">`;
     if (sender === 'ai' && typeof marked !== 'undefined' && text) html += marked.parse(text);
@@ -269,14 +273,18 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null) {
     }
 
     const safe = (text || "").replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    
+    // 🛠️ RESTORED COMPLETE EVENT LOOKUPS (EDIT / DELETE / REGEN KEYS LOCKED)
     let controls = sender === 'ai' ? `
         <span class="action-icon" onclick="navigator.clipboard.writeText(\`${safe}\`)">📋 Copy</span>
         <span class="action-icon" style="margin-left:8px;" onclick="speakText(\`${safe}\`)">🔊 Speak</span>
         <span class="action-icon" style="margin-left:8px;" onclick="window.triggerRegenerate()">🔄 Re-gen</span>` : `
-        <span class="action-icon" onclick="window.triggerDelete('${id}')">🗑️ Del</span>`;
+        <span class="action-icon" onclick="window.triggerMessageEdit(this, '${id}')">✏️ Edit</span>
+        <span class="action-icon" style="margin-left:8px;" onclick="window.triggerDelete('${id}')">🗑️ Del</span>`;
 
     html += `<div class="msg-meta-bar">${controls}</div>`;
-    div.innerHTML = html; chatContainer.appendChild(div);
+    div.innerHTML = html; 
+    chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 
     if (sender === 'ai' && typeof hljs !== 'undefined') {
@@ -298,6 +306,17 @@ function removeLoading(id) { const el = document.getElementById(id); if (el) el.
 window.speakText = speakText;
 window.triggerDelete = function(id) { document.getElementById(`msg-${id}`)?.remove(); };
 window.triggerRegenerate = function() { if (lastUserPrompt) sendMessage(lastUserPrompt); };
+
+// ✏️ Global Explicit Window Bindings for User Message Edits
+window.triggerMessageEdit = function(el, id) {
+    const textNode = el.parentElement.previousElementSibling;
+    const currentText = textNode.innerText || textNode.textContent;
+    const revisedText = prompt("Refactor or Edit message input:", currentText.trim());
+    if (revisedText && revisedText.trim() !== "") {
+        textNode.innerHTML = revisedText.replace(/\n/g, '<br>');
+        sendMessage(revisedText.trim());
+    }
+};
 
 // Menu Interfaces
 const attach = document.getElementById('attach');
