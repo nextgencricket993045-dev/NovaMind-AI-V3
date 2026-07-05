@@ -43,15 +43,12 @@ if (voiceToggle) {
     });
 }
 
-// ====================================================================
-// 🎙️ WALKIETALKIE GUARD ENGINE (ABSOLUTE 0% AUTOSTART SURFACE)
-// ====================================================================
+// 🎙️ WALKIETALKIE GUARD ENGINE
 let isWalkieTalkieActive = false;
 let speechRecognitionAgent = null;
 
 function executeMicPipelineLifecycle() {
     if (isWalkieTalkieActive !== true) return;
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
@@ -72,7 +69,6 @@ function executeMicPipelineLifecycle() {
             }
         };
     }
-
     try { speechRecognitionAgent.start(); } catch(e){}
 }
 
@@ -80,41 +76,31 @@ window.stopWalkieTalkieMode = function() {
     isWalkieTalkieActive = false;
     const walkieBtn = document.getElementById("walkieTalkieToggle");
     if(walkieBtn) walkieBtn.style.background = "transparent";
-
     const statusPanel = document.getElementById('voiceStatusPanel');
     if(statusPanel) statusPanel.style.setProperty('display', 'none', 'important');
-
-    if (speechRecognitionAgent) {
-        try { speechRecognitionAgent.stop(); } catch(e){}
-    }
+    if (speechRecognitionAgent) { try { speechRecognitionAgent.stop(); } catch(e){} }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
 };
 
 window.triggerManualWalkieTalkie = function(e) {
     if (!e || !e.isTrusted || e.detail === 0) return; 
-
     if (isWalkieTalkieActive === true) {
         stopWalkieTalkieMode();
     } else {
         isWalkieTalkieActive = true;
         isVoiceReplyEnabled = true;
         if(voiceToggle) voiceToggle.innerText = "🔊";
-        
         const walkieBtn = document.getElementById("walkieTalkieToggle");
         if(walkieBtn) walkieBtn.style.background = "#10b981";
-
         const statusPanel = document.getElementById('voiceStatusPanel');
         if(statusPanel) statusPanel.style.setProperty('display', 'flex', 'important');
-
         executeMicPipelineLifecycle();
     }
 };
 
-// Global Tab Switcher Logic (Chat & Image Only)
 window.switchGenerationMode = function(targetMode) {
     activeGenerationMode = targetMode;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    
     const targetTabBtn = document.getElementById(`mode-${targetMode}`);
     if (targetTabBtn) targetTabBtn.classList.add('active');
 
@@ -130,9 +116,7 @@ window.switchGenerationMode = function(targetMode) {
     }
 };
 
-// ==========================================
-// 🗂️ Sidebar LocalDB Sync Module
-// ==========================================
+// 🗂️ Sidebar LocalDB Modules
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
 const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
@@ -173,15 +157,11 @@ function loadCloudChatHistory() {
     });
 }
 
-// 👑 FIXED: Full Functional New Chat Reset Hook
 if (newChatBtn) {
     newChatBtn.addEventListener('click', () => {
         const chatContainer = document.getElementById('chat');
-        if (chatContainer) {
-            chatContainer.innerHTML = `<div class="message ai" id="msg-welcome-init"><div class="msg-text">Workspace Active. Chat and Image Studio is deployed successfully. 👍</div></div>`;
-        }
-        imageBase64 = null;
-        uploadedFileData = null;
+        if (chatContainer) chatContainer.innerHTML = `<div class="message ai" id="msg-welcome-init"><div class="msg-text">Workspace Active. Chat and Video Matrix Studio is deployed successfully. 👍</div></div>`;
+        imageBase64 = null; uploadedFileData = null; uploadedFileName = null; uploadedFileType = null;
         const preview = document.getElementById('previewContainer');
         if (preview) preview.style.display = 'none';
         const msgInput = document.getElementById('message');
@@ -194,26 +174,34 @@ if (newChatBtn) {
 if (footerUserLabel) footerUserLabel.innerText = currentUserName;
 loadCloudChatHistory();
 
-// File Module Uploader Nodes
+// 🎥 FILE & MASSIVE VIDEO LOADER INTEGRATION
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
         const file = e.target.files[0]; if (!file) return;
         const targetType = this.getAttribute('data-target-type');
+        
+        document.getElementById('previewName').textContent = `⏳ Processing massive file...`;
+        document.getElementById('previewContainer').style.display = 'flex';
+        
         const reader = new FileReader();
         reader.onload = function(evt) {
             const rawBase64 = evt.target.result.split(',')[1];
-            if (targetType === 'image') imageBase64 = rawBase64; else uploadedFileData = rawBase64;
-            uploadedFileName = file.name; uploadedFileType = targetType;
-            document.getElementById('previewName').textContent = `📎 Ready: ${file.name}`;
-            document.getElementById('previewContainer').style.display = 'flex';
+            if (targetType === 'image') {
+                imageBase64 = rawBase64;
+            } else {
+                uploadedFileData = rawBase64; // Handles massive MB base64 seamlessly
+            }
+            uploadedFileName = file.name; 
+            uploadedFileType = targetType;
+            document.getElementById('previewName').textContent = `📎 Ready (${targetType.toUpperCase()}): ${file.name}`;
         };
         reader.readAsDataURL(file);
     });
 }
-document.getElementById('cancelPreview').addEventListener('click', () => { imageBase64 = null; uploadedFileData = null; document.getElementById('previewContainer').style.display = 'none'; });
+document.getElementById('cancelPreview').addEventListener('click', () => { imageBase64 = null; uploadedFileData = null; uploadedFileName = null; uploadedFileType = null; document.getElementById('previewContainer').style.display = 'none'; });
 
-// Central Messages Matrix Shell
+// Messages Matrix Pipeline
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
 const chatContainer = document.getElementById('chat');
@@ -231,7 +219,7 @@ async function sendMessage(text) {
     lastUserPrompt = text;
     const mode = activeGenerationMode; 
     const ratio = document.getElementById("aspectRatio") ? document.getElementById("aspectRatio").value : "16:9";
-    const displayPrompt = text || `Uploaded File structure Asset Matrix`;
+    const displayPrompt = text || `Analyzed Uploaded ${uploadedFileType || 'Asset'} Block: ${uploadedFileName || ''}`;
     
     appendMessage('user', displayPrompt, null, null, "user-" + Date.now());
     if(messageInput) messageInput.value = '';
@@ -263,7 +251,6 @@ async function sendMessage(text) {
     }
 }
 
-// 🛠️ ALL ACTIONS ACTIVE (Copy, Speak, Re-gen, Edit, Delete)
 function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "") {
     const div = document.createElement('div'); div.className = `message ${sender}`; div.id = `msg-${id}`;
     let html = `<div class="msg-text">`;
@@ -273,9 +260,7 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
 
     if (mediaUrl) {
         html += `<div class="media-container" style="margin-top:12px;">`;
-        if (mediaType === 'image') {
-            html += `<img src="${mediaUrl}" style="max-width:100%; border-radius:12px;">`;
-        }
+        if (mediaType === 'image') html += `<img src="${mediaUrl}" style="max-width:100%; border-radius:12px;">`;
         html += `</div>`;
     }
 
@@ -295,7 +280,7 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
 
 function appendLoading() {
     const id = 'load-' + Date.now(); const div = document.createElement('div'); div.className = 'message ai'; div.id = id;
-    div.innerHTML = `<div class="msg-text">Processing cluster parameters... ⏳</div>`;
+    div.innerHTML = `<div class="msg-text">Processing matrix parameters... ⏳</div>`;
     chatContainer.appendChild(div); chatContainer.scrollTop = chatContainer.scrollHeight; return id;
 }
 function removeLoading(id) { const el = document.getElementById(id); if (el) el.remove(); }
@@ -308,23 +293,19 @@ window.triggerMessageEdit = function(el, id) {
     if (text) sendMessage(text.trim());
 };
 
-// Theme Toggle Engine
 const themeToggle = document.getElementById('themeToggle');
 if(themeToggle) {
-    document.body.classList.add('dark-theme');
-    themeToggle.innerText = "🌙";
+    document.body.classList.add('dark-theme'); themeToggle.innerText = "🌙";
     themeToggle.addEventListener('click', () => {
         const isDarkNow = document.body.classList.toggle('dark-theme');
         themeToggle.innerText = isDarkNow ? "🌙" : "☀️";
     });
 }
 
-// Menu Click Actions
 const attach = document.getElementById('attach'); const attachMenu = document.getElementById('attachMenu');
 if(attach) attach.addEventListener('click', (e) => { e.stopPropagation(); attachMenu.classList.toggle('active'); });
 document.addEventListener('click', () => { if(attachMenu) attachMenu.classList.remove('active'); });
 
-// Authentication Overlay Integration Panels
 const userProfile = document.getElementById('userProfile'); const authOverlay = document.getElementById('authOverlay');
 if(userProfile && authOverlay) userProfile.addEventListener('click', () => { authOverlay.style.display = 'flex'; authMode = "signin"; document.getElementById('authTitle').innerText = "Welcome back"; document.getElementById('authName').style.display = "none"; });
 
@@ -332,14 +313,13 @@ if (authOverlay) {
     authOverlay.addEventListener('click', async (e) => {
         const nameField = document.getElementById('authName'); const titleText = document.getElementById('authTitle');
         const submitBtn = document.getElementById('authSubmitBtn'); const switchLink = document.getElementById('authSwitchModeBtn');
-        const switchPrompt = document.getElementById('authSwitchPrompt');
         if (e.target.id === 'authCloseBtn') { authOverlay.style.display = 'none'; return; }
         if (e.target.id === 'authSwitchModeBtn') {
             e.preventDefault();
             if (authMode === "signin") {
-                authMode = "signup"; titleText.innerText = "Create account"; nameField.style.display = "block"; submitBtn.innerText = "Sign Up"; switchLink.innerText = "Sign in"; if(switchPrompt) switchPrompt.innerText = "Already have an account?";
+                authMode = "signup"; titleText.innerText = "Create account"; nameField.style.display = "block"; submitBtn.innerText = "Sign Up"; switchLink.innerText = "Sign in";
             } else {
-                authMode = "signin"; titleText.innerText = "Welcome back"; nameField.style.display = "none"; submitBtn.innerText = "Continue"; switchLink.innerText = "Sign up"; if(switchPrompt) switchPrompt.innerText = "Don't have an account?";
+                authMode = "signin"; titleText.innerText = "Welcome back"; nameField.style.display = "none"; submitBtn.innerText = "Continue"; switchLink.innerText = "Sign up";
             }
         }
         if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {

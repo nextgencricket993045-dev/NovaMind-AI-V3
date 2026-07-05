@@ -6,9 +6,8 @@
     <title>NovaMind AI V4 - Premium Studio</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#212121">
-    <link rel="stylesheet" href="style.css?v=5.5">
+    <link rel="stylesheet" href="style.css?v=6.0">
     
-    <!-- Premium Math Auto Render Libraries (KaTeX) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
@@ -42,7 +41,6 @@
                 <div class="logo">🤖 NovaMind AI</div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <!-- 🎙️ Walkie Talkie & Voice Features Restored completely -->
                 <button id="walkieTalkieToggle" class="theme-btn" onclick="triggerManualWalkieTalkie(event)" title="Start Continuous Voice Mode">🎙️</button>
                 <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Audio Synthesis">🔊</button>
                 <button id="themeToggle" class="theme-btn">🌙</button>
@@ -57,7 +55,6 @@
             <button onclick="stopWalkieTalkieMode()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;">Stop</button>
         </div>
 
-        <!-- Only Chat and Image Tabs Kept (Video & Audio Removed) -->
         <div class="mode-tabs">
             <button id="mode-chat" class="tab-btn active" onclick="switchGenerationMode('chat')">💬 Chat</button>
             <button id="mode-image" class="tab-btn" onclick="switchGenerationMode('image')">🎨 Image</button>
@@ -71,7 +68,7 @@
 
         <div id="chat" class="chat">
             <div class="message ai" id="msg-welcome-init">
-                <div class="msg-text">Workspace Active. Chat and Image Studio is deployed successfully. 👍</div>
+                <div class="msg-text">Workspace Active. Chat, Image and Video Matrix Analytics Studio is deployed successfully. 👍</div>
             </div>
         </div>
 
@@ -84,6 +81,7 @@
 
         <div id="attachMenu" class="attach-menu">
             <button onclick="triggerFileSelect('image')">📷 Image Input</button>
+            <button onclick="triggerFileSelect('video')">🎥 Video Analysis (Unlimited MB)</button>
             <button onclick="triggerFileSelect('pdf')">📄 PDF Matrix</button>
             <button onclick="triggerFileSelect('docx')">📁 Word File</button>
             <button onclick="triggerFileSelect('txt')">📝 Text Logs</button>
@@ -101,35 +99,28 @@
     <div class="auth-card">
         <h2 id="authTitle">Welcome back</h2>
         <p id="authSubtitle" style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Cloud storage parameter setup</p>
-        
-        <button id="googleAuthBtn" class="auth-btn google-btn">
-            <span style="font-weight: 600;">🌐 Continue with Google</span>
-        </button>
-        
+        <button id="googleAuthBtn" class="auth-btn google-btn"><span style="font-weight: 600;">🌐 Continue with Google</span></button>
         <div class="auth-divider"><span>OR</span></div>
-        
         <div class="auth-form-group">
             <input type="text" id="authName" placeholder="Full Name" style="display: none; width:100%; padding:12px; margin:6px 0; border-radius:6px;">
             <input type="email" id="authUsername" placeholder="Email address" style="width:100%; padding:12px; margin:6px 0; border-radius:6px;">
             <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:12px; margin:6px 0; border-radius:6px;">
         </div>
-        
         <button id="authSubmitBtn" class="auth-btn primary-submit-btn" style="margin-top: 16px;">Continue</button>
-        
         <div style="margin-top: 20px; text-align: center; font-size: 13px;">
             <span id="authSwitchPrompt" style="color: #94a3b8;">Don't have an account?</span>
             <a href="#" id="authSwitchModeBtn" style="color: #6366f1; text-decoration: none; font-weight: 600; margin-left: 4px;">Sign up</a>
         </div>
-        
         <button id="authCloseBtn" class="auth-btn cancel-btn" style="margin-top: 12px; width: 100%;">Cancel</button>
     </div>
 </div>
 
-<script src="script.js?v=5.5"></script>
+<script src="script.js?v=6.0"></script>
 <script>
     let triggerFileSelect = (type) => {
         const input = document.getElementById('masterFileInput');
         if(type === 'image') input.accept = "image/*";
+        else if(type === 'video') input.accept = "video/*";
         else if(type === 'pdf') input.accept = ".pdf";
         else if(type === 'docx') input.accept = ".doc,.docx";
         else input.accept = ".txt,.js,.py,.html,.css,.json";
