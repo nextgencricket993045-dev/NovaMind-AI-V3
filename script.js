@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Premium Stable Core Script Engine (Voice Mode Live)
+// NovaMind AI V4 - Premium Stable Core Script Engine (Sidebar Fixed)
 // ====================================================================
 
 let imageBase64 = null;
@@ -9,25 +9,16 @@ let uploadedFileType = null;
 let isVoiceReplyEnabled = false;
 let authMode = "signin"; 
 
-// 🔊 Walkie-Talkie Fluid Architecture Core Parameters
-let isWalkieTalkieActive = false;
-let speechRecognitionAgent = null;
-let currentVoiceUtteranceInstance = null;
+let currentUserEmail = localStorage.getItem("novaUserEmail") || "guest_user";
+let currentUserName = localStorage.getItem("novaUserName") || "Guest Account";
 
-let currentUserEmail = localStorage.getItem("novaUserEmail") || null;
-let currentUserName = localStorage.getItem("novaUserName") || null;
-
-// Clean Speech Synthesis Module
 function speakText(text) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    
-    // Clear heavy Markdown structures from plain text synthesis payload
     const plainText = text.replace(/[\#\*`_\-]/g, "").trim();
     currentVoiceUtteranceInstance = new SpeechSynthesisUtterance(plainText);
     currentVoiceUtteranceInstance.lang = "hi-IN";
 
-    // Loopback Hooks: If Walkie Talkie is active, pause listener while speaking
     currentVoiceUtteranceInstance.onstart = () => {
         if (isWalkieTalkieActive && speechRecognitionAgent) {
             document.getElementById('voiceStatusText').innerText = "Walkie-Talkie: NovaMind AI is speaking...";
@@ -46,7 +37,6 @@ function speakText(text) {
     window.speechSynthesis.speak(currentVoiceUtteranceInstance);
 }
 
-// Setup Standard Voice Synthesizer Button Triggers
 const voiceToggle = document.getElementById("voiceReplyToggle");
 if (voiceToggle) {
     voiceToggle.addEventListener("click", () => {
@@ -58,6 +48,10 @@ if (voiceToggle) {
 // ==========================================
 // 🎙️ Walkie Talkie Recognition Core Setup
 // ==========================================
+let isWalkieTalkieActive = false;
+let speechRecognitionAgent = null;
+let currentVoiceUtteranceInstance = null;
+
 function initSpeechRecognitionPipeline() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -66,9 +60,9 @@ function initSpeechRecognitionPipeline() {
     }
     
     speechRecognitionAgent = new SpeechRecognition();
-    speechRecognitionAgent.continuous = false; // Process individual fluid sentences cleanly
+    speechRecognitionAgent.continuous = false;
     speechRecognitionAgent.interimResults = false;
-    speechRecognitionAgent.lang = "hi-IN"; // Dynamic bilingual interpretation matrix
+    speechRecognitionAgent.lang = "hi-IN";
 
     speechRecognitionAgent.onresult = (event) => {
         const voiceCapturedText = event.results[0][0].transcript;
@@ -80,13 +74,11 @@ function initSpeechRecognitionPipeline() {
 
     speechRecognitionAgent.onerror = (e) => {
         if (e.error === 'no-speech' && isWalkieTalkieActive) {
-            // Auto restart loop if silence timeouts
             try { speechRecognitionAgent.start(); } catch(err){}
         }
     };
 
     speechRecognitionAgent.onend = () => {
-        // Safe check to maintain continuous background listening matrix loop
         if (isWalkieTalkieActive && !window.speechSynthesis.speaking && !currentVoiceUtteranceInstance) {
             try { speechRecognitionAgent.start(); } catch(err){}
         }
@@ -108,7 +100,7 @@ if (walkieToggleBtn) {
             stopWalkieTalkieMode();
         } else {
             isWalkieTalkieActive = true;
-            isVoiceReplyEnabled = true; // Force-enable audio synthesis output
+            isVoiceReplyEnabled = true;
             if(voiceToggle) voiceToggle.innerText = "🔊";
             
             walkieToggleBtn.style.background = "#10b981";
@@ -121,7 +113,9 @@ if (walkieToggleBtn) {
     });
 }
 
-// Sidebar Setup
+// ==========================================
+// 🗂️ Sidebar & Database Matrix (FIXED)
+// ==========================================
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
 const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
@@ -151,12 +145,20 @@ function writeLocalMemoryDB(data) {
     localStorage.setItem("nova_memory_vault", JSON.stringify(data));
 }
 
+// Fixed UI Loader: Fetches regardless of account level securely
 function loadCloudChatHistory() {
-    if (!currentUserEmail || !chatHistoryList) return;
+    if (!chatHistoryList) return;
     const db = getLocalMemoryDB();
+    
+    // Guest or user dynamic history filtration
     const history = db.chats.filter(c => c.userEmail === currentUserEmail).slice(-15).reverse();
     
     chatHistoryList.innerHTML = "";
+    if (history.length === 0) {
+        chatHistoryList.innerHTML = `<div style="font-size:12px; opacity:0.4; padding:10px;">No recent sessions</div>`;
+        return;
+    }
+
     history.forEach(log => {
         const btn = document.createElement('button');
         btn.className = "history-item-node";
@@ -174,17 +176,20 @@ function loadCloudChatHistory() {
 
 if(newChatBtn) {
     newChatBtn.addEventListener('click', () => {
-        document.getElementById('chat').innerHTML = `<div class="message ai"><div class="msg-text">New operational layer started.</div></div>`;
+        document.getElementById('chat').innerHTML = `<div class="message ai"><div class="msg-text">New chat thread started.</div></div>`;
         sidebar.classList.remove('active');
     });
 }
 
-if (currentUserName && footerUserLabel) {
+// Initial Sync run on script mount
+if (footerUserLabel) {
     footerUserLabel.innerText = currentUserName;
-    loadCloudChatHistory();
 }
+loadCloudChatHistory();
 
-// File Input Binder
+// ==========================================
+// Unified File Input Handler
+// ==========================================
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
@@ -214,7 +219,7 @@ function clearPreview() {
     if(masterFileInput) masterFileInput.value = '';
 }
 
-// Messaging Logic Hub
+// Messaging Pipeline
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
 const chatContainer = document.getElementById('chat');
@@ -233,7 +238,8 @@ async function sendMessage(text) {
     const mode = (typeof activeGenerationMode !== "undefined") ? activeGenerationMode : "chat";
     const ratio = document.getElementById("aspectRatio") ? document.getElementById("aspectRatio").value : "16:9";
 
-    appendMessage('user', text || `Uploaded File asset: [${uploadedFileName}]`);
+    const displayPrompt = text || `Uploaded file: [${uploadedFileName}]`;
+    appendMessage('user', displayPrompt);
     if(messageInput) messageInput.value = '';
     
     const loadingId = appendLoading();
@@ -255,16 +261,15 @@ async function sendMessage(text) {
 
         if (data && (data.reply || data.mediaUrl)) {
             appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType);
-            
-            // Core Audio Loop Trigger
             if (isVoiceReplyEnabled && data.reply) speakText(data.reply);
             
-            if (mode === "chat" && currentUserEmail && text && data.reply) {
+            // Core Local Save Engine Block (Always active for Guest + Accounts)
+            if (mode === "chat" && data.reply) {
                 const db = getLocalMemoryDB();
-                const logTitle = text.length > 20 ? text.substring(0, 20) + "..." : text;
-                db.chats.push({ userEmail: currentUserEmail, title: logTitle, prompt: text, response: data.reply });
+                const logTitle = displayPrompt.length > 20 ? displayPrompt.substring(0, 20) + "..." : displayPrompt;
+                db.chats.push({ userEmail: currentUserEmail, title: logTitle, prompt: displayPrompt, response: data.reply });
                 writeLocalMemoryDB(db);
-                loadCloudChatHistory();
+                loadCloudChatHistory(); // Dynamic Sidebar Reload
             }
         }
     } catch (error) {
@@ -311,7 +316,7 @@ function appendLoading() {
     const id = 'load-' + Date.now();
     const div = document.createElement('div');
     div.className = 'message ai'; div.id = id;
-    div.innerHTML = `<div class="msg-text">Analyzing sound matrices and building simple answer... ⏳</div>`;
+    div.innerHTML = `<div class="msg-text">Analyzing matrices and preparing simple answer... ⏳</div>`;
     chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
     return id;
@@ -336,7 +341,7 @@ if(themeToggle) {
     });
 }
 
-// User Profiles Authentication Mapping Layer
+// User Profile System Mapping
 const userProfile = document.getElementById('userProfile');
 const authOverlay = document.getElementById('authOverlay');
 if(userProfile && authOverlay) userProfile.addEventListener('click', () => authOverlay.style.display = 'flex');
@@ -347,7 +352,6 @@ if (authOverlay) {
         const titleText = document.getElementById('authTitle');
         const subtitleText = document.getElementById('authSubtitle');
         const submitBtn = document.getElementById('authSubmitBtn');
-        const promptText = document.getElementById('authSwitchPrompt');
         const switchLink = document.getElementById('authSwitchModeBtn');
 
         if (e.target.id === 'authCloseBtn') authOverlay.style.display = 'none';
@@ -356,12 +360,10 @@ if (authOverlay) {
             e.preventDefault();
             if (authMode === "signin") {
                 authMode = "signup"; titleText.innerText = "Create account";
-                subtitleText.innerText = "Setup private local keys safely";
                 if(nameField) nameField.style.display = "block";
                 submitBtn.innerText = "Sign Up";
             } else {
                 authMode = "signin"; titleText.innerText = "Welcome back";
-                subtitleText.innerText = "Provide password parameters";
                 if(nameField) nameField.style.display = "none";
                 submitBtn.innerText = "Continue";
             }
