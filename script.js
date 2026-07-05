@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Premium Stable Core Script Engine (Absolute Final)
+// NovaMind AI V4 - Premium Stable Core Script Engine (Absolute Master)
 // ====================================================================
 
 let imageBase64 = null;
@@ -54,7 +54,9 @@ if (voiceToggle) {
     });
 }
 
-// Walkie Talkie Core Setup
+// ==========================================
+// 🎙️ Walkie Talkie Core Setup (AUTOSTART EXPLICITLY DISABLED)
+// ==========================================
 let isWalkieTalkieActive = false;
 let speechRecognitionAgent = null;
 
@@ -81,8 +83,10 @@ function initSpeechRecognitionPipeline() {
 
 window.stopWalkieTalkieMode = function() {
     isWalkieTalkieActive = false;
-    document.getElementById("walkieTalkieToggle").style.background = "transparent";
-    document.getElementById('voiceStatusPanel').style.setProperty('display', 'none', 'important');
+    const walkieBtn = document.getElementById("walkieTalkieToggle");
+    if(walkieBtn) walkieBtn.style.background = "transparent";
+    const statusPanel = document.getElementById('voiceStatusPanel');
+    if(statusPanel) statusPanel.style.setProperty('display', 'none', 'important');
     if (speechRecognitionAgent) { try { speechRecognitionAgent.stop(); } catch(e){} }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
 };
@@ -104,7 +108,15 @@ if (walkieToggleBtn) {
     });
 }
 
-// Sidebar Storage Matrix Controls
+// Ensure voice status panel is hidden explicitly on site initial load
+document.addEventListener("DOMContentLoaded", () => {
+    const statusPanel = document.getElementById('voiceStatusPanel');
+    if(statusPanel) statusPanel.style.setProperty('display', 'none', 'important');
+});
+
+// ==========================================
+// 🗂️ Sidebar Storage Matrix Controls
+// ==========================================
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
 const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
@@ -171,7 +183,9 @@ if(newChatBtn) {
 if (footerUserLabel) footerUserLabel.innerText = currentUserName;
 loadCloudChatHistory();
 
-// File Inputs
+// ==========================================
+// Unified File Input Handlers
+// ==========================================
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
@@ -198,7 +212,9 @@ function clearPreview() {
     if(masterFileInput) masterFileInput.value = '';
 }
 
-// Unified Core Communication Channel
+// ==========================================
+// Core Messaging Pipeline Network Matrix
+// ==========================================
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
 const chatContainer = document.getElementById('chat');
@@ -297,7 +313,6 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
     div.innerHTML = html; chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
 
-    // 👑 Auto Render Math Formulas via KaTeX instantly on inject
     renderMathFormulasSafely(div);
 
     if (sender === 'ai' && typeof hljs !== 'undefined') {
@@ -339,10 +354,23 @@ if(themeToggle) {
     });
 }
 
-// Auth Panel Mapping Layer
+// ==========================================
+// 🔐 100% SECURE & FULL AUTHENTICATION SYSTEM
+// ==========================================
 const userProfile = document.getElementById('userProfile');
 const authOverlay = document.getElementById('authOverlay');
-if(userProfile && authOverlay) userProfile.addEventListener('click', () => authOverlay.style.display = 'flex');
+
+if(userProfile && authOverlay) {
+    userProfile.addEventListener('click', () => {
+        authOverlay.style.display = 'flex';
+        authMode = "signin";
+        document.getElementById('authTitle').innerText = "Welcome back";
+        document.getElementById('authName').style.display = "none";
+        document.getElementById('authSubmitBtn').innerText = "Continue";
+        document.getElementById('authSwitchModeBtn').innerText = "Sign up";
+        document.getElementById('authSwitchPrompt').innerText = "Don't have an account?";
+    });
+}
 
 if (authOverlay) {
     authOverlay.addEventListener('click', async (e) => {
@@ -350,30 +378,46 @@ if (authOverlay) {
         const titleText = document.getElementById('authTitle');
         const submitBtn = document.getElementById('authSubmitBtn');
         const switchLink = document.getElementById('authSwitchModeBtn');
+        const switchPrompt = document.getElementById('authSwitchPrompt');
 
-        if (e.target.id === 'authCloseBtn') authOverlay.style.display = 'none';
+        if (e.target.id === 'authCloseBtn') {
+            authOverlay.style.display = 'none';
+            return;
+        }
 
+        // Perfect Switch Link Handler For Sign Up / Sign In Toggles
         if (e.target.id === 'authSwitchModeBtn') {
             e.preventDefault();
             if (authMode === "signin") {
-                authMode = "signup"; titleText.innerText = "Create account";
+                authMode = "signup"; 
+                titleText.innerText = "Create account";
                 if(nameField) nameField.style.display = "block";
                 submitBtn.innerText = "Sign Up";
+                switchLink.innerText = "Sign in";
+                if(switchPrompt) switchPrompt.innerText = "Already have an account?";
             } else {
-                authMode = "signin"; titleText.innerText = "Welcome back";
+                authMode = "signin"; 
+                titleText.innerText = "Welcome back";
                 if(nameField) nameField.style.display = "none";
                 submitBtn.innerText = "Continue";
+                switchLink.innerText = "Sign up";
+                if(switchPrompt) switchPrompt.innerText = "Don't have an account?";
             }
         }
 
+        // Google Authentication Logic
         if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
             localStorage.setItem("novaUserEmail", "ayush@novamind.com");
             localStorage.setItem("novaUserName", "Ayush Vercel");
-            currentUserEmail = "ayush@novamind.com"; currentUserName = "Ayush Vercel";
+            currentUserEmail = "ayush@novamind.com"; 
+            currentUserName = "Ayush Vercel";
             if(footerUserLabel) footerUserLabel.innerText = "Ayush Vercel";
-            authOverlay.style.display = 'none'; loadCloudChatHistory();
+            authOverlay.style.display = 'none'; 
+            loadCloudChatHistory();
+            return;
         }
 
+        // Traditional Submission Controller Block
         if (e.target.id === 'authSubmitBtn') {
             const email = document.getElementById('authUsername')?.value.trim();
             const pass = document.getElementById('authPassword')?.value.trim();
@@ -386,19 +430,25 @@ if (authOverlay) {
                 if(!db.users) db.users = [];
                 const check = db.users.find(u => u.email === email);
                 if (check) return alert("User already active!");
+                
                 db.users.push({ email, pass, name });
                 writeLocalMemoryDB(db);
-                alert("Account deployed! Please sign in.");
-                authMode = "signup"; switchLink.click();
+                alert("Account deployed! Please sign in now.");
+                
+                authMode = "signup"; 
+                switchLink.click();
             } else {
                 if(!db.users) db.users = [];
                 const check = db.users.find(u => u.email === email && u.pass === pass);
                 if (!check) return alert("Wrong credentials.");
+                
                 localStorage.setItem("novaUserEmail", check.email);
                 localStorage.setItem("novaUserName", check.name);
-                currentUserEmail = check.email; currentUserName = check.name;
+                currentUserEmail = check.email; 
+                currentUserName = check.name;
                 if(footerUserLabel) footerUserLabel.innerText = check.name;
-                authOverlay.style.display = 'none'; loadCloudChatHistory();
+                authOverlay.style.display = 'none'; 
+                loadCloudChatHistory();
             }
         }
     });

@@ -6,7 +6,7 @@
     <title>NovaMind AI V4 - Premium Studio</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#212121">
-    <link rel="stylesheet" href="style.css?v=4.1">
+    <link rel="stylesheet" href="style.css?v=4.2">
     
     <!-- Premium Math Auto Render Libraries (KaTeX) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
@@ -98,18 +98,40 @@
     </main>
 </div>
 
+<!-- ====================================================================
+     👑 100% FIXED AUTHENTICATION OVERLAY LAYER (ALL BUTTONS RESTORED)
+     ==================================================================== -->
 <div id="authOverlay" class="auth-page-overlay" style="display:none;">
     <div class="auth-card">
         <h2 id="authTitle">Welcome back</h2>
-        <input type="text" id="authName" placeholder="Full Name" style="display: none; width:100%; padding:10px; margin:5px 0;">
-        <input type="email" id="authUsername" placeholder="Email address" style="width:100%; padding:10px; margin:5px 0;">
-        <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:10px; margin:5px 0;">
-        <button id="authSubmitBtn" class="auth-btn primary-submit-btn">Continue</button>
-        <button id="authCloseBtn" class="auth-btn cancel-btn">Cancel</button>
+        <p id="authSubtitle" style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Cloud storage parameter setup</p>
+        
+        <!-- Google Sign-In Explicit Target Button -->
+        <button id="googleAuthBtn" class="auth-btn google-btn">
+            <span style="font-weight: 600;">🌐 Continue with Google</span>
+        </button>
+        
+        <div class="auth-divider"><span>OR</span></div>
+        
+        <div class="auth-form-group">
+            <input type="text" id="authName" placeholder="Full Name" style="display: none; width:100%; padding:12px; margin:6px 0; border-radius:6px;">
+            <input type="email" id="authUsername" placeholder="Email address" style="width:100%; padding:12px; margin:6px 0; border-radius:6px;">
+            <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:12px; margin:6px 0; border-radius:6px;">
+        </div>
+        
+        <button id="authSubmitBtn" class="auth-btn primary-submit-btn" style="margin-top: 16px;">Continue</button>
+        
+        <!-- Toggle Anchor Container Link System -->
+        <div style="margin-top: 20px; text-align: center; font-size: 13px;">
+            <span id="authSwitchPrompt" style="color: #94a3b8;">Don't have an account?</span>
+            <a href="#" id="authSwitchModeBtn" style="color: #6366f1; text-decoration: none; font-weight: 600; margin-left: 4px;">Sign up</a>
+        </div>
+        
+        <button id="authCloseBtn" class="auth-btn cancel-btn" style="margin-top: 12px; width: 100%;">Cancel</button>
     </div>
 </div>
 
-<script src="script.js?v=4.1"></script>
+<script src="script.js?v=4.2"></script>
 <script>
     let activeGenerationMode = "chat";
     function triggerFileSelect(type) {
