@@ -8,6 +8,7 @@ let uploadedFileName = null;
 let uploadedFileType = null;
 let isVoiceReplyEnabled = false;
 let authMode = "signin"; 
+let activeGenerationMode = "chat"; 
 
 let currentUserEmail = localStorage.getItem("novaUserEmail") || "guest_user";
 let currentUserName = localStorage.getItem("novaUserName") || "Guest Account";
@@ -42,79 +43,104 @@ if (voiceToggle) {
     });
 }
 
-// ==========================================
-// 🎙️ Walkie Talkie Pipeline (STRICT USER-CLICK ONLY DEPLOYMENT)
-// ==========================================
+// ====================================================================
+// 🎙️ WALKIETALKIE DYNAMIC CONTROLLER (0% INITIAL PAGE LOAD SURFACE)
+// ====================================================================
 let isWalkieTalkieActive = false;
 let speechRecognitionAgent = null;
 
-function initSpeechRecognitionPipeline() {
+// Is function ko tab tak call nahi kiya ja sakta jab tak click true na ho
+function activateMicPipelineOnlyOnDemand() {
+    if (!isWalkieTalkieActive) return;
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-    speechRecognitionAgent = new SpeechRecognition();
-    speechRecognitionAgent.continuous = false;
-    speechRecognitionAgent.interimResults = false;
-    speechRecognitionAgent.lang = "hi-IN";
-    speechRecognitionAgent.onresult = (event) => {
-        const text = event.results[0][0].transcript;
-        if (text.trim() !== "") sendMessage(text);
-    };
-    speechRecognitionAgent.onend = () => {
-        // Only restart if the user explicitly kept the mode alive
-        if (isWalkieTalkieActive && !window.speechSynthesis.speaking) { 
-            try { speechRecognitionAgent.start(); } catch(e){} 
-        }
-    };
+
+    // Object creation strictly delayed until physical human button press
+    if (!speechRecognitionAgent) {
+        speechRecognitionAgent = new SpeechRecognition();
+        speechRecognitionAgent.continuous = false;
+        speechRecognitionAgent.interimResults = false;
+        speechRecognitionAgent.lang = "hi-IN";
+
+        speechRecognitionAgent.onresult = (event) => {
+            const text = event.results[0][0].transcript;
+            if (text && text.trim() !== "") sendMessage(text.trim());
+        };
+
+        speechRecognitionAgent.onend = () => {
+            if (isWalkieTalkieActive === true && !window.speechSynthesis.speaking) {
+                try { speechRecognitionAgent.start(); } catch(e){}
+            }
+        };
+    }
+
+    try { speechRecognitionAgent.start(); } catch(e){}
 }
 
 window.stopWalkieTalkieMode = function() {
     isWalkieTalkieActive = false;
     const walkieBtn = document.getElementById("walkieTalkieToggle");
     if(walkieBtn) walkieBtn.style.background = "transparent";
-    
+
     const statusPanel = document.getElementById('voiceStatusPanel');
     if(statusPanel) statusPanel.style.setProperty('display', 'none', 'important');
-    
-    if (speechRecognitionAgent) { try { speechRecognitionAgent.stop(); } catch(e){} }
+
+    if (speechRecognitionAgent) {
+        try { speechRecognitionAgent.stop(); } catch(e){}
+    }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
 };
 
-const walkieToggleBtn = document.getElementById("walkieTalkieToggle");
-if (walkieToggleBtn) {
-    // Pure user gesture validation target
-    walkieToggleBtn.addEventListener("click", (event) => {
-        // Guard checking against automated phantom clicks
-        if (!event.isTrusted) return; 
-        
-        if (isWalkieTalkieActive) {
-            stopWalkieTalkieMode();
-        } else {
-            isWalkieTalkieActive = true; 
-            isVoiceReplyEnabled = true;
-            if(voiceToggle) voiceToggle.innerText = "🔊";
-            walkieToggleBtn.style.background = "#10b981";
-            
-            const statusPanel = document.getElementById('voiceStatusPanel');
-            if(statusPanel) statusPanel.style.setProperty('display', 'flex', 'important');
-            
-            if (!speechRecognitionAgent) initSpeechRecognitionPipeline();
-            try { speechRecognitionAgent.start(); } catch(e){}
-        }
-    });
-}
+// 👑 Pure explicit user physical gesture entry target map
+window.triggerManualWalkieTalkie = function(e) {
+    // strict programmatic loads check protection block
+    if (!e || !e.isTrusted || e.detail === 0) return; 
 
-// Clean system reset matrix on initial load
-isWalkieTalkieActive = false;
-const statusPanelInit = document.getElementById('voiceStatusPanel');
-if(statusPanelInit) statusPanelInit.style.setProperty('display', 'none', 'important');
+    if (isWalkieTalkieActive === true) {
+        stopWalkieTalkieMode();
+    } else {
+        isWalkieTalkieActive = true;
+        isVoiceReplyEnabled = true;
+        if(voiceToggle) voiceToggle.innerText = "🔊";
+        
+        const walkieBtn = document.getElementById("walkieTalkieToggle");
+        if(walkieBtn) walkieBtn.style.background = "#10b981";
+
+        const statusPanel = document.getElementById('voiceStatusPanel');
+        if(statusPanel) statusPanel.style.setProperty('display', 'flex', 'important');
+
+        // Execute processing pipeline only now!
+        activateMicPipelineOnlyOnDemand();
+    }
+};
+
+// Global Tab State Verification Loops
+window.switchGenerationMode = function(targetMode) {
+    activeGenerationMode = targetMode;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    const targetTabBtn = document.getElementById(`mode-${targetMode}`);
+    if (targetTabBtn) targetTabBtn.classList.add('active');
+
+    const mainInput = document.getElementById("message");
+    const ratioSelect = document.getElementById("aspectRatio");
+
+    if(targetMode === "chat") {
+        if(mainInput) mainInput.placeholder = "Ask NovaMind AI...";
+        if(ratioSelect) ratioSelect.style.display = "none";
+    } else {
+        if(mainInput) mainInput.placeholder = `Describe prompt to generate ${targetMode}...`;
+        if(ratioSelect) ratioSelect.style.display = (targetMode === "image" || targetMode === "video") ? "block" : "none";
+    }
+};
 
 // ==========================================
-// 🗂️ Sidebar & Session History Controls
+// 🗂️ Sidebar LocalDB Sync Module
 // ==========================================
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
 const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
-const newChatBtn = document.getElementById('newChatBtn');
 const chatHistoryList = document.getElementById('chatHistoryList');
 const footerUserLabel = document.getElementById('footerUserLabel');
 
@@ -132,7 +158,6 @@ function getLocalMemoryDB() {
     if (!db) { db = JSON.stringify({ users: [], chats: [] }); localStorage.setItem("nova_memory_vault", db); }
     try { return JSON.parse(db); } catch(e) { return { users: [], chats: [] }; }
 }
-
 function writeLocalMemoryDB(data) { localStorage.setItem("nova_memory_vault", JSON.stringify(data)); }
 
 function loadCloudChatHistory() {
@@ -150,12 +175,11 @@ function loadCloudChatHistory() {
         chatHistoryList.appendChild(btn);
     });
 }
-if(newChatBtn) newChatBtn.addEventListener('click', () => { document.getElementById('chat').innerHTML = `<div class="message ai"><div class="msg-text">New thread active.</div></div>`; sidebar.classList.remove('active'); });
 
 if (footerUserLabel) footerUserLabel.innerText = currentUserName;
 loadCloudChatHistory();
 
-// Dynamic File Input Handlers
+// File Module Attachment Nodes
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
@@ -190,9 +214,9 @@ function triggerSend() {
 let lastUserPrompt = "";
 async function sendMessage(text) {
     lastUserPrompt = text;
-    const mode = (typeof activeGenerationMode !== "undefined") ? activeGenerationMode : "chat";
+    const mode = activeGenerationMode; 
     const ratio = document.getElementById("aspectRatio") ? document.getElementById("aspectRatio").value : "16:9";
-    const displayPrompt = text || `Uploaded File structure Asset: [${uploadedFileName}]`;
+    const displayPrompt = text || `Uploaded File structure Asset Matrix`;
     
     appendMessage('user', displayPrompt, null, null, "user-" + Date.now());
     if(messageInput) messageInput.value = '';
@@ -209,14 +233,6 @@ async function sendMessage(text) {
         if (data) {
             appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType, "ai-" + Date.now());
             if (isVoiceReplyEnabled && data.reply) speakText(data.reply);
-            
-            if (mode === "chat" && data.reply) {
-                const db = getLocalMemoryDB();
-                const logTitle = displayPrompt.length > 20 ? displayPrompt.substring(0, 20) + "..." : displayPrompt;
-                if(!db.chats) db.chats = [];
-                db.chats.push({ userEmail: currentUserEmail, title: logTitle, prompt: displayPrompt, response: data.reply });
-                writeLocalMemoryDB(db); loadCloudChatHistory();
-            }
         }
     } catch (error) {
         removeLoading(loadingId);
@@ -236,7 +252,7 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
         if (mediaType === 'image') {
             html += `<img src="${mediaUrl}" style="max-width:100%; border-radius:12px;">`;
         } else if (mediaType === 'video') {
-            html += `<video src="${mediaUrl}" controls style="width:100%; border-radius:12px;" autoplay loop muted playsinline></video>`;
+            html += `<img src="${mediaUrl}" style="max-width:100%; border-radius:12px; border:2px solid #6366f1;">`;
         } else if (mediaType === 'audio') {
             html += `<audio src="${mediaUrl}" controls style="width:100%;" autoplay></audio>`;
         }
@@ -245,37 +261,20 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
 
     const safe = (text || "").replace(/`/g, '\\`').replace(/\$/g, '\\$');
     let controls = sender === 'ai' ? `
-        <span class="action-icon" onclick="navigator.clipboard.writeText(\`${safe}\`)">📋 Copy</span>
-        <span class="action-icon" style="margin-left:8px;" onclick="speakText(\`${safe}\`)">🔊 Speak</span>
-        <span class="action-icon" style="margin-left:8px;" onclick="window.triggerRegenerate()">🔄 Re-gen</span>` : `
-        <span class="action-icon" onclick="window.triggerMessageEdit(this, '${id}')">✏️ Edit</span>
-        <span class="action-icon" style="margin-left:8px;" onclick="window.triggerDelete('${id}')">🗑️ Del</span>`;
+        <span class="action-icon" onclick="if(event.isTrusted) navigator.clipboard.writeText(\`${safe}\`)">📋 Copy</span>
+        <span class="action-icon" style="margin-left:8px;" onclick="if(event.isTrusted) speakText(\`${safe}\`)">🔊 Speak</span>` : '';
 
     html += `<div class="msg-meta-bar">${controls}</div>`; div.innerHTML = html;
     chatContainer.appendChild(div); chatContainer.scrollTop = chatContainer.scrollHeight;
     renderMathFormulasSafely(div);
-    if (sender === 'ai' && typeof hljs !== 'undefined') div.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
 }
 
 function appendLoading() {
     const id = 'load-' + Date.now(); const div = document.createElement('div'); div.className = 'message ai'; div.id = id;
-    div.innerHTML = `<div class="msg-text">Processing core media matrix asset... ⏳</div>`;
+    div.innerHTML = `<div class="msg-text">Processing cluster media matrix asset... ⏳</div>`;
     chatContainer.appendChild(div); chatContainer.scrollTop = chatContainer.scrollHeight; return id;
 }
 function removeLoading(id) { const el = document.getElementById(id); if (el) el.remove(); }
-
-window.triggerDelete = function(id) { document.getElementById(`msg-${id}`)?.remove(); };
-window.triggerRegenerate = function() { if (lastUserPrompt) sendMessage(lastUserPrompt); };
-window.triggerMessageEdit = function(el, id) {
-    const node = el.parentElement.previousElementSibling;
-    const text = prompt("Edit message:", node.innerText.trim());
-    if (text) sendMessage(text.trim());
-};
-
-// Menu Elements Mapping
-const attach = document.getElementById('attach'); const attachMenu = document.getElementById('attachMenu');
-if(attach) attach.addEventListener('click', (e) => { e.stopPropagation(); attachMenu.classList.toggle('active'); });
-document.addEventListener('click', () => { if(attachMenu) attachMenu.classList.remove('active'); });
 
 // Theme Matrix Initialization Setup
 const themeToggle = document.getElementById('themeToggle');
@@ -288,7 +287,14 @@ if(themeToggle) {
     });
 }
 
-// 🔐 Secure Authentication Overlay Layer Controls
+// Menu Click Actions
+const attach = document.getElementById('attach'); const attachMenu = document.getElementById('attachMenu');
+if(attach) attach.addEventListener('click', (e) => { e.stopPropagation(); attachMenu.classList.toggle('active'); });
+document.addEventListener('click', () => { if(attachMenu) attachMenu.classList.remove('active'); });
+
+// ==========================================
+// 🔐 Secure Authentication Framework
+// ==========================================
 const userProfile = document.getElementById('userProfile'); const authOverlay = document.getElementById('authOverlay');
 if(userProfile && authOverlay) userProfile.addEventListener('click', () => { authOverlay.style.display = 'flex'; authMode = "signin"; document.getElementById('authTitle').innerText = "Welcome back"; document.getElementById('authName').style.display = "none"; });
 

@@ -4,18 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovaMind AI V4 - Premium Studio</title>
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#212121">
-    <link rel="stylesheet" href="style.css?v=4.2">
+    <link rel="stylesheet" href="style.css?v=4.9">
     
-    <!-- Premium Math Auto Render Libraries (KaTeX) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body class="dark-theme">
 
@@ -42,7 +35,7 @@
                 <div class="logo">🤖 NovaMind AI</div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <button id="walkieTalkieToggle" class="theme-btn" title="Start Continuous Voice Mode">🎙️</button>
+                <button id="walkieTalkieToggle" class="theme-btn" onclick="triggerManualWalkieTalkie(event)" title="Start Continuous Voice Mode">🎙️</button>
                 <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Audio Synthesis">🔊</button>
                 <button id="themeToggle" class="theme-btn">🌙</button>
             </div>
@@ -98,15 +91,11 @@
     </main>
 </div>
 
-<!-- ====================================================================
-     👑 100% FIXED AUTHENTICATION OVERLAY LAYER (ALL BUTTONS RESTORED)
-     ==================================================================== -->
 <div id="authOverlay" class="auth-page-overlay" style="display:none;">
     <div class="auth-card">
         <h2 id="authTitle">Welcome back</h2>
         <p id="authSubtitle" style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Cloud storage parameter setup</p>
         
-        <!-- Google Sign-In Explicit Target Button -->
         <button id="googleAuthBtn" class="auth-btn google-btn">
             <span style="font-weight: 600;">🌐 Continue with Google</span>
         </button>
@@ -121,7 +110,6 @@
         
         <button id="authSubmitBtn" class="auth-btn primary-submit-btn" style="margin-top: 16px;">Continue</button>
         
-        <!-- Toggle Anchor Container Link System -->
         <div style="margin-top: 20px; text-align: center; font-size: 13px;">
             <span id="authSwitchPrompt" style="color: #94a3b8;">Don't have an account?</span>
             <a href="#" id="authSwitchModeBtn" style="color: #6366f1; text-decoration: none; font-weight: 600; margin-left: 4px;">Sign up</a>
@@ -131,10 +119,9 @@
     </div>
 </div>
 
-<script src="script.js?v=4.2"></script>
+<script src="script.js?v=4.9"></script>
 <script>
-    let activeGenerationMode = "chat";
-    function triggerFileSelect(type) {
+    let triggerFileSelect = (type) => {
         const input = document.getElementById('masterFileInput');
         if(type === 'image') input.accept = "image/*";
         else if(type === 'video') input.accept = "video/*";
@@ -145,25 +132,11 @@
         input.setAttribute('data-target-type', type);
         input.click();
         document.getElementById('attachMenu').classList.remove('active');
-    }
-    function switchGenerationMode(targetMode) {
-        activeGenerationMode = targetMode;
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`mode-${targetMode}`).classList.add('active');
-        const mainInput = document.getElementById("message");
-        const ratioSelect = document.getElementById("aspectRatio");
-
-        if(targetMode === "chat") {
-            mainInput.placeholder = "Ask NovaMind Anything...";
-            ratioSelect.style.display = "none";
-        } else {
-            mainInput.placeholder = `Describe prompt to generate ${targetMode}...`;
-            ratioSelect.style.display = (targetMode === "image" || targetMode === "video") ? "block" : "none";
-        }
-    }
-
+    };
+    
+    // Complete caching/service worker cleanup layer to block residual microphone loops
     if ('serviceWorker' in navigator) {
-        window.navigator.serviceWorker.getRegistrations().then(registrations => {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
             for(let registration of registrations) { registration.unregister(); }
         });
     }
