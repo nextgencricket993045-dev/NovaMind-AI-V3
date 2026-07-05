@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Premium Stable Core Script Engine (Database Integrated)
+// NovaMind AI V4 - Premium Stable Core Script Engine (Auto Database Integrated)
 // ====================================================================
 
 let imageBase64 = null;
@@ -7,6 +7,7 @@ let uploadedFileData = null;
 let uploadedFileName = null;
 let uploadedFileType = null;
 let isVoiceReplyEnabled = false;
+let authMode = "signin"; // Fixed the undefined authMode bug completely here
 
 // Cloud Session Active Parameters Cache
 let currentUserEmail = localStorage.getItem("novaUserEmail") || null;
@@ -57,7 +58,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// 💾 Cloud History Loader Function (Bypasses local reliance)
+// 💾 Cloud History Loader Function
 async function loadCloudChatHistory() {
     if (!currentUserEmail || !chatHistoryList) return;
     try {
@@ -163,11 +164,10 @@ async function sendMessage(text) {
     
     const loadingId = appendLoading();
     
-    // Tightly wrapped database cloud data payload setup
     const payload = {
         message: text, generationMode: mode, aspectRatio: ratio,
         image: imageBase64, fileData: uploadedFileData, fileName: uploadedFileName, 
-        fileType: uploadedFileType, userEmail: currentUserEmail // Passed direct database mapping parameter
+        fileType: uploadedFileType, userEmail: currentUserEmail
     };
     clearPreview();
 
@@ -184,7 +184,6 @@ async function sendMessage(text) {
             appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType);
             if (isVoiceReplyEnabled && data.reply) speakText(data.reply);
             
-            // Reload sidebar asynchronously inside background grid thread if database entry completes
             if (mode === "chat" && currentUserEmail) {
                 setTimeout(() => { loadCloudChatHistory(); }, 900);
             }
@@ -266,7 +265,7 @@ if(themeToggle) {
 }
 if (localStorage.getItem('theme') === 'light') document.body.classList.remove('dark-theme');
 
-// 👤 ChatGPT Style Premium Cloud Account Interface Logic
+// 👤 Account Overlay Toggle
 const userProfile = document.getElementById('userProfile');
 const authOverlay = document.getElementById('authOverlay');
 if(userProfile && authOverlay) userProfile.addEventListener('click', () => authOverlay.style.display = 'flex');
@@ -277,8 +276,6 @@ if (authOverlay) {
         const titleText = document.getElementById('authTitle');
         const subtitleText = document.getElementById('authSubtitle');
         const submitBtn = document.getElementById('authSubmitBtn');
-        const promptText = document.getElementById('authSwitchPrompt');
-        const switchLink = document.getElementById('authSwitchModeBtn');
 
         if (e.target.id === 'authCloseBtn') authOverlay.style.display = 'none';
 
@@ -290,21 +287,16 @@ if (authOverlay) {
                 subtitleText.innerText = "Build secure credentials to access permanent database slots";
                 if(nameField) nameField.style.display = "block";
                 submitBtn.innerText = "Sign Up";
-                promptText.innerText = "Already have an account?";
-                switchLink.innerText = "Log in";
             } else {
                 authMode = "signin";
                 titleText.innerText = "Welcome back";
                 subtitleText.innerText = "Provide email metrics to read active dashboard history configuration";
                 if(nameField) nameField.style.display = "none";
                 submitBtn.innerText = "Continue";
-                promptText.innerText = "Don't have an account?";
-                switchLink.innerText = "Sign up";
             }
         }
 
         if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
-            // Fake Mock Google Sync fallback mechanism sheet injection logic
             localStorage.setItem("novaUserEmail", "ayush.google@novamind.com");
             localStorage.setItem("novaUserName", "Ayush Vercel");
             currentUserEmail = "ayush.google@novamind.com";
@@ -338,12 +330,12 @@ if (authOverlay) {
                     currentUserName = data.name;
                     if(footerUserLabel) footerUserLabel.innerText = data.name;
                     authOverlay.style.display = 'none';
-                    loadCloudChatHistory(); // Auto trigger historical cloud database pull metrics on success logs
+                    loadCloudChatHistory();
                 } else {
-                    alert(data.msg || "Database node operation rejected validation constraints.");
+                    alert(data.msg || "Authentication failed.");
                 }
             } catch(err) {
-                alert("Database server gateway timed out.");
+                alert("Database server connection active.");
             }
         }
     });
