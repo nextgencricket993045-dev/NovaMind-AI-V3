@@ -34,10 +34,19 @@
                 <div class="logo">🤖 NovaMind AI</div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Audio">🔊</button>
+                <button id="walkieTalkieToggle" class="theme-btn" title="Start Continuous Voice Conversation Mode" style="background: rgba(99,102,241,0.1); border-radius: 50%; width:36px; height:36px; font-size:15px;">🎙️</button>
+                <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Audio Synthesis">🔊</button>
                 <button id="themeToggle" class="theme-btn">🌙</button>
             </div>
         </header>
+
+        <div id="voiceStatusPanel" style="display: none; background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 12px 20px; color: white; border-radius: 12px; margin: 10px 20px 0 20px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(99,102,241,0.3);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="voiceStatusIndicator" class="pulse-dot">🔴</span>
+                <span id="voiceStatusText">Walkie-Talkie Active: Listening to you...</span>
+            </div>
+            <button onclick="stopWalkieTalkieMode()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight:600;">Stop</button>
+        </div>
 
         <div class="mode-tabs">
             <button id="mode-chat" class="tab-btn active" onclick="switchGenerationMode('chat')">💬 Chat</button>
@@ -54,7 +63,7 @@
 
         <div id="chat" class="chat">
             <div class="message ai" id="msg-welcome-init">
-                <div class="msg-text">Workspace Engine Connected. Ready for simple explanation mode and high volume video upload. 👍</div>
+                <div class="msg-text">Workspace operational. Click the 🎙️ icon in the header to talk directly with NovaMind AI.</div>
             </div>
         </div>
 
@@ -84,7 +93,7 @@
 <div id="authOverlay" class="auth-page-overlay" style="display:none;">
     <div class="auth-card">
         <h2 id="authTitle">Welcome back</h2>
-        <p id="authSubtitle" style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Provide credentials to access cloud storage</p>
+        <p id="authSubtitle" style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Cloud storage parameter setup</p>
         <button id="googleAuthBtn" class="auth-btn google-btn">Continue with Google</button>
         <div class="auth-divider"><span>OR</span></div>
         <div class="auth-form-group">
@@ -104,6 +113,9 @@
 <script src="script.js"></script>
 <script>
     let activeGenerationMode = "chat";
+    // Hide panel grid container initial override explicitly
+    document.getElementById('voiceStatusPanel').style.setProperty('display', 'none', 'important');
+
     function triggerFileSelect(type) {
         const input = document.getElementById('masterFileInput');
         if(type === 'image') input.accept = "image/*";

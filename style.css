@@ -131,3 +131,10 @@ code { font-family: monospace; font-size: 13px; color: #f8f8f2; }
     .chat { padding: 20px; }
     .bottom { padding: 15px 20px; }
 }
+/* Live Pulse Animation for mic recognition node indicator */
+@keyframes voicePulse {
+    0% { opacity: 0.3; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0.3; transform: scale(0.9); }
+}
+.pulse-dot { animation: voicePulse 1.2s infinite ease-in-out; display: inline-block; margin-right: 5px; }
