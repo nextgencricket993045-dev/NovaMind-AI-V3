@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Premium Stable Core Script Engine (Sidebar Fixed)
+// NovaMind AI V4 - Premium Stable Core Script Engine (Absolute Final)
 // ====================================================================
 
 let imageBase64 = null;
@@ -15,26 +15,20 @@ let currentUserName = localStorage.getItem("novaUserName") || "Guest Account";
 function speakText(text) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const plainText = text.replace(/[\#\*`_\-]/g, "").trim();
-    currentVoiceUtteranceInstance = new SpeechSynthesisUtterance(plainText);
-    currentVoiceUtteranceInstance.lang = "hi-IN";
+    const speech = new SpeechSynthesisUtterance(text.replace(/[\#\*`_\-]/g, ""));
+    speech.lang = "hi-IN";
 
-    currentVoiceUtteranceInstance.onstart = () => {
+    speech.onstart = () => {
         if (isWalkieTalkieActive && speechRecognitionAgent) {
-            document.getElementById('voiceStatusText').innerText = "Walkie-Talkie: NovaMind AI is speaking...";
             try { speechRecognitionAgent.stop(); } catch(e){}
         }
     };
-
-    currentVoiceUtteranceInstance.onend = () => {
-        currentVoiceUtteranceInstance = null;
+    speech.onend = () => {
         if (isWalkieTalkieActive && speechRecognitionAgent) {
-            document.getElementById('voiceStatusText').innerText = "Walkie-Talkie: Listening to you...";
             try { speechRecognitionAgent.start(); } catch(e){}
         }
     };
-
-    window.speechSynthesis.speak(currentVoiceUtteranceInstance);
+    window.speechSynthesis.speak(speech);
 }
 
 const voiceToggle = document.getElementById("voiceReplyToggle");
@@ -45,19 +39,13 @@ if (voiceToggle) {
     });
 }
 
-// ==========================================
-// 🎙️ Walkie Talkie Recognition Core Setup
-// ==========================================
+// Walkie Talkie Core Setup
 let isWalkieTalkieActive = false;
 let speechRecognitionAgent = null;
-let currentVoiceUtteranceInstance = null;
 
 function initSpeechRecognitionPipeline() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Web Speech API is not supported in this browser engine.");
-        return;
-    }
+    if (!SpeechRecognition) return;
     
     speechRecognitionAgent = new SpeechRecognition();
     speechRecognitionAgent.continuous = false;
@@ -65,23 +53,14 @@ function initSpeechRecognitionPipeline() {
     speechRecognitionAgent.lang = "hi-IN";
 
     speechRecognitionAgent.onresult = (event) => {
-        const voiceCapturedText = event.results[0][0].transcript;
-        if (voiceCapturedText.trim() !== "") {
-            document.getElementById('voiceStatusText').innerText = "Processing your message... ⏳";
-            sendMessage(voiceCapturedText);
-        }
+        const capturedText = event.results[0][0].transcript;
+        if (capturedText.trim() !== "") sendMessage(capturedText);
     };
-
-    speechRecognitionAgent.onerror = (e) => {
-        if (e.error === 'no-speech' && isWalkieTalkieActive) {
-            try { speechRecognitionAgent.start(); } catch(err){}
-        }
+    speechRecognitionAgent.onerror = () => {
+        if (isWalkieTalkieActive) { try { speechRecognitionAgent.start(); } catch(e){} }
     };
-
     speechRecognitionAgent.onend = () => {
-        if (isWalkieTalkieActive && !window.speechSynthesis.speaking && !currentVoiceUtteranceInstance) {
-            try { speechRecognitionAgent.start(); } catch(err){}
-        }
+        if (isWalkieTalkieActive && !window.speechSynthesis.speaking) { try { speechRecognitionAgent.start(); } catch(e){} }
     };
 }
 
@@ -102,20 +81,15 @@ if (walkieToggleBtn) {
             isWalkieTalkieActive = true;
             isVoiceReplyEnabled = true;
             if(voiceToggle) voiceToggle.innerText = "🔊";
-            
             walkieToggleBtn.style.background = "#10b981";
             document.getElementById('voiceStatusPanel').style.setProperty('display', 'flex', 'important');
-            document.getElementById('voiceStatusText').innerText = "Walkie-Talkie Active: Listening...";
-            
             if (!speechRecognitionAgent) initSpeechRecognitionPipeline();
-            try { speechRecognitionAgent.start(); } catch(err){}
+            try { speechRecognitionAgent.start(); } catch(e){}
         }
     });
 }
 
-// ==========================================
-// 🗂️ Sidebar & Database Matrix (FIXED)
-// ==========================================
+// Sidebar Storage Matrix Controls
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
 const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
@@ -138,20 +112,17 @@ function getLocalMemoryDB() {
         db = JSON.stringify({ users: [], chats: [] });
         localStorage.setItem("nova_memory_vault", db);
     }
-    return JSON.parse(db);
+    try { return JSON.parse(db); } catch(e) { return { users: [], chats: [] }; }
 }
 
 function writeLocalMemoryDB(data) {
     localStorage.setItem("nova_memory_vault", JSON.stringify(data));
 }
 
-// Fixed UI Loader: Fetches regardless of account level securely
 function loadCloudChatHistory() {
     if (!chatHistoryList) return;
     const db = getLocalMemoryDB();
-    
-    // Guest or user dynamic history filtration
-    const history = db.chats.filter(c => c.userEmail === currentUserEmail).slice(-15).reverse();
+    const history = (db.chats || []).filter(c => c.userEmail === currentUserEmail).slice(-15).reverse();
     
     chatHistoryList.innerHTML = "";
     if (history.length === 0) {
@@ -163,7 +134,6 @@ function loadCloudChatHistory() {
         const btn = document.createElement('button');
         btn.className = "history-item-node";
         btn.innerText = `💬 ${log.title}`;
-        btn.title = log.title;
         btn.addEventListener('click', () => {
             document.getElementById('chat').innerHTML = `
                 <div class="message user"><div class="msg-text">${log.prompt}</div></div>
@@ -176,34 +146,26 @@ function loadCloudChatHistory() {
 
 if(newChatBtn) {
     newChatBtn.addEventListener('click', () => {
-        document.getElementById('chat').innerHTML = `<div class="message ai"><div class="msg-text">New chat thread started.</div></div>`;
+        document.getElementById('chat').innerHTML = `<div class="message ai"><div class="msg-text">New chat thread active.</div></div>`;
         sidebar.classList.remove('active');
     });
 }
 
-// Initial Sync run on script mount
-if (footerUserLabel) {
-    footerUserLabel.innerText = currentUserName;
-}
+if (footerUserLabel) footerUserLabel.innerText = currentUserName;
 loadCloudChatHistory();
 
-// ==========================================
-// Unified File Input Handler
-// ==========================================
+// File Inputs
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
-
         const targetType = this.getAttribute('data-target-type');
         const reader = new FileReader();
-        
         reader.onload = function(evt) {
             const rawBase64 = evt.target.result.split(',')[1];
             if (targetType === 'image') imageBase64 = rawBase64;
             else uploadedFileData = rawBase64;
-            
             uploadedFileName = file.name; uploadedFileType = targetType;
             document.getElementById('previewName').textContent = `📎 Ready: ${file.name}`;
             document.getElementById('previewContainer').style.display = 'flex';
@@ -219,7 +181,7 @@ function clearPreview() {
     if(masterFileInput) masterFileInput.value = '';
 }
 
-// Messaging Pipeline
+// Unified Core Communication Channel
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
 const chatContainer = document.getElementById('chat');
@@ -238,7 +200,7 @@ async function sendMessage(text) {
     const mode = (typeof activeGenerationMode !== "undefined") ? activeGenerationMode : "chat";
     const ratio = document.getElementById("aspectRatio") ? document.getElementById("aspectRatio").value : "16:9";
 
-    const displayPrompt = text || `Uploaded file: [${uploadedFileName}]`;
+    const displayPrompt = text || `Uploaded Asset file: [${uploadedFileName}]`;
     appendMessage('user', displayPrompt);
     if(messageInput) messageInput.value = '';
     
@@ -256,25 +218,35 @@ async function sendMessage(text) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
-        const data = await response.json();
+
+        // 🛡️ FRONTEND EXCEPTION GUARD: If server breaks text syntax, safely evaluate into explicit response
+        const contentType = response.headers.get("content-type");
+        let data;
+        if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            const rawTxt = await response.text();
+            data = { reply: `⚠️ Server Internal Matrix String Error: ${rawTxt.substring(0, 80)}` };
+        }
+
         removeLoading(loadingId);
 
         if (data && (data.reply || data.mediaUrl)) {
             appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType);
             if (isVoiceReplyEnabled && data.reply) speakText(data.reply);
             
-            // Core Local Save Engine Block (Always active for Guest + Accounts)
-            if (mode === "chat" && data.reply) {
+            if (mode === "chat" && data.reply && !data.reply.startsWith("⚠️")) {
                 const db = getLocalMemoryDB();
                 const logTitle = displayPrompt.length > 20 ? displayPrompt.substring(0, 20) + "..." : displayPrompt;
+                if(!db.chats) db.chats = [];
                 db.chats.push({ userEmail: currentUserEmail, title: logTitle, prompt: displayPrompt, response: data.reply });
                 writeLocalMemoryDB(db);
-                loadCloudChatHistory(); // Dynamic Sidebar Reload
+                loadCloudChatHistory();
             }
         }
     } catch (error) {
         removeLoading(loadingId);
-        appendMessage('ai', `⚠️ Connection Log Sync Interrupted: ${error.message}`);
+        appendMessage('ai', `⚠️ Synchronization Interrupt: ${error.message}`);
     }
 }
 
@@ -316,7 +288,7 @@ function appendLoading() {
     const id = 'load-' + Date.now();
     const div = document.createElement('div');
     div.className = 'message ai'; div.id = id;
-    div.innerHTML = `<div class="msg-text">Analyzing matrices and preparing simple answer... ⏳</div>`;
+    div.innerHTML = `<div class="msg-text">Processing stream matrices... ⏳</div>`;
     chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
     return id;
@@ -341,7 +313,7 @@ if(themeToggle) {
     });
 }
 
-// User Profile System Mapping
+// Auth Panel Mapping Layer
 const userProfile = document.getElementById('userProfile');
 const authOverlay = document.getElementById('authOverlay');
 if(userProfile && authOverlay) userProfile.addEventListener('click', () => authOverlay.style.display = 'flex');
@@ -350,7 +322,6 @@ if (authOverlay) {
     authOverlay.addEventListener('click', async (e) => {
         const nameField = document.getElementById('authName');
         const titleText = document.getElementById('authTitle');
-        const subtitleText = document.getElementById('authSubtitle');
         const submitBtn = document.getElementById('authSubmitBtn');
         const switchLink = document.getElementById('authSwitchModeBtn');
 
@@ -386,6 +357,7 @@ if (authOverlay) {
             
             const db = getLocalMemoryDB();
             if (authMode === "signup") {
+                if(!db.users) db.users = [];
                 const check = db.users.find(u => u.email === email);
                 if (check) return alert("User already active!");
                 db.users.push({ email, pass, name });
@@ -393,6 +365,7 @@ if (authOverlay) {
                 alert("Account deployed! Please sign in.");
                 authMode = "signup"; switchLink.click();
             } else {
+                if(!db.users) db.users = [];
                 const check = db.users.find(u => u.email === email && u.pass === pass);
                 if (!check) return alert("Wrong credentials.");
                 localStorage.setItem("novaUserEmail", check.email);
