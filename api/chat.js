@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Premium Master Production Backend Engine (Fixed Content Payload)
+// NovaMind AI V4 - Ultimate Stable Production Backend Engine (Final)
 // ====================================================================
 
 export default async function handler(req, res) {
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-        return res.status(200).json({ reply: "⚠️ Gemini API key missing from Vercel environment variables." });
+        return res.status(200).json({ reply: "⚠️ Gemini API key missing from environment configuration." });
     }
 
     let finalMediaUrl = null; 
@@ -20,28 +20,26 @@ export default async function handler(req, res) {
     let resHeight = 720;
     if (aspectRatio === "1:1") { resWidth = 1024; resHeight = 1024; }
 
-    const cleanPrompt = encodeURIComponent((message || "masterpiece").replace(/[^a-zA-Z0-9 ]/g, "").trim());
-    const randomSeed = Math.floor(Math.random() * 8888888);
+    // Dynamic prompt cleansing for absolute direct asset injection
+    const targetQuery = (message && message.trim() !== "") ? message.trim() : "masterpiece generation asset";
+    const cleanPrompt = encodeURIComponent(targetQuery.replace(/[^a-zA-Z0-9 ]/g, "").trim());
+    const randomSeed = Math.floor(Math.random() * 9999999);
 
-    // Multimedia Asset Generation Routing
+    // ⚡ FULL INTERLOCKED MULTIMEDIA ENGINE ROUTING
     if (generationMode === "image") {
         finalMediaType = "image";
-        finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=${resWidth}&height=${resHeight}&seed=${randomSeed}&enhance=true`;
+        finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=${resWidth}&height=${resHeight}&seed=${randomSeed}&enhance=true&nologo=true`;
     } else if (generationMode === "video") {
         finalMediaType = "video";
-        finalMediaUrl = `https://video.pollinations.ai/p/${cleanPrompt}%204k%20raw%20motion?width=${resWidth}&height=${resHeight}&seed=${randomSeed}`;
+        finalMediaUrl = `https://video.pollinations.ai/p/${cleanPrompt}%20cinematic%20motion%20ultra%20hd?width=${resWidth}&height=${resHeight}&seed=${randomSeed}`;
     } else if (generationMode === "audio") {
         finalMediaType = "audio";
         finalMediaUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=${cleanPrompt}`;
     }
 
-    // 📄 Build Multi-Part Payload Structure correctly
+    // Prepare content tracking arrays for text queries or analysis models
     let partsArray = [];
-    
-    if (image) {
-        partsArray.push({ inlineData: { mimeType: "image/jpeg", data: image } });
-    }
-    
+    if (image) partsArray.push({ inlineData: { mimeType: "image/jpeg", data: image } });
     if (fileData) {
         let mime = "application/pdf";
         if (fileType === "txt") mime = "text/plain";
@@ -49,55 +47,37 @@ export default async function handler(req, res) {
         partsArray.push({ inlineData: { mimeType: mime, data: fileData } });
     }
     
-    // Safety Fallback
-    const textQuery = (message && message.trim() !== "") ? message.trim() : "Explain the attached file content contextually.";
-    partsArray.push({ text: textQuery });
+    partsArray.push({ text: targetQuery });
 
-    // 🎓 Super strict educational formatting module injected here:
-    const systemRules = "You are NovaMind AI V4, an outstanding online school teacher. " +
-        "Your absolute goal is to explain complex topics (Maths, Physics, Chemistry, etc.) in a crystal-clear, structural manner using highly simplified Hindi-English (Hinglish). " +
-        "NEVER write long, ugly paragraphs or mixed sentences. " +
-        "FOLLOW THIS EXACT STRUCTURE FOR EVERY ANSWER:\n" +
-        "1. 📌 SUMMARY/DEFINITION: Explain the core concept in just 2 simple lines.\n" +
-        "2. 🔍 STEP-BY-STEP BREAKDOWN: Use bold numbered lists or bullet points. Keep each step separate and clean.\n" +
-        "3. 🧪 FORMULA / EQUATIONS: Always format mathematical formulations with standard inline delimiters like $a_n$ or standalone blocks like $$\\frac{1}{3}$$ so they render beautifully.\n" +
-        "4. 💡 REAL-LIFE EXAMPLE: Give a practical example that an average student can easily visualize.\n" +
-        "At the very bottom, always append a beautiful '📊 DISCOVERABILITY & SEO METRICS' block with 3 High-CTR Titles, 10 comma-separated tags, and 5 hashtags.";
+    const systemRules = "You are NovaMind AI V4, an outstanding online school teacher. Explain everything in an EXTREMELY SIMPLE, structural step-by-step manner using clean Hindi-English (Hinglish). Use clear bullet points and bold headers. Formulate math using inline delimiters like $a_n$ or blocks like $$\\frac{1}{3}$$. ALWAYS append a beautiful '📊 DISCOVERABILITY & SEO METRICS' block with 3 High-CTR Titles, 10 tags, and 5 hashtags at the bottom.";
 
     const requestBody = {
         contents: [{ parts: partsArray }],
         tools: [{ googleSearch: {} }],
-        systemInstruction: { 
-            parts: [{ text: systemRules }] 
-        }
+        systemInstruction: { parts: [{ text: systemRules }] }
     };
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody)
-        });
-
-        const rawText = await response.text();
-        let data;
-        try {
-            data = JSON.parse(rawText);
-        } catch(parseErr) {
-            return res.status(200).json({ reply: `⚠️ Server Error: ${rawText.substring(0, 80)}` });
+        // If it's a direct generation asset, we can instantly return vectors or process alongside description texts
+        let textReply = "";
+        
+        if (generationMode === "chat") {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody)
+            });
+            const data = await response.json();
+            
+            if (data.error) return res.status(200).json({ reply: `⚠️ Google API limit reached: ${data.error.message}` });
+            textReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Processing complete.";
+        } else {
+            // Instant absolute creation feedback loops for non-chat modes
+            textReply = `✨ **NovaMind Premium Engine Output Ready!**\n\n**Mode:** ${generationMode.toUpperCase()} Asset Generation\n**Prompt Matrix:** ${targetQuery}\n\nYour creative file stream node is processed successfully. You can stream or use the media control element below.`;
         }
 
-        if (data.error) {
-            return res.status(200).json({ reply: `⚠️ Google API Quota Exception: ${data.error.message}` });
-        }
-
-        let reply = "Processing complete, but model returned an empty string format.";
-        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-            reply = data.candidates[0].content.parts[0].text;
-        }
-
-        return res.status(200).json({ reply, mediaUrl: finalMediaUrl, mediaType: finalMediaType });
+        return res.status(200).json({ reply: textReply, mediaUrl: finalMediaUrl, mediaType: finalMediaType });
     } catch (error) {
-        return res.status(200).json({ reply: `⚠️ Server Gateway Interruption: ${error.message}` });
+        return res.status(200).json({ reply: `⚠️ Server Pipeline Fault: ${error.message}` });
     }
 }

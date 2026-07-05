@@ -12,7 +12,6 @@ let authMode = "signin";
 let currentUserEmail = localStorage.getItem("novaUserEmail") || "guest_user";
 let currentUserName = localStorage.getItem("novaUserName") || "Guest Account";
 
-// 👑 KaTeX Math Rendering Engine Setup
 function renderMathFormulasSafely(element) {
     if (typeof renderMathInElement !== "undefined") {
         renderMathInElement(element, {
@@ -32,17 +31,6 @@ function speakText(text) {
     window.speechSynthesis.cancel();
     const speech = new SpeechSynthesisUtterance(text.replace(/[\#\*`_\-]/g, ""));
     speech.lang = "hi-IN";
-
-    speech.onstart = () => {
-        if (isWalkieTalkieActive && speechRecognitionAgent) {
-            try { speechRecognitionAgent.stop(); } catch(e){}
-        }
-    };
-    speech.onend = () => {
-        if (isWalkieTalkieActive && speechRecognitionAgent) {
-            try { speechRecognitionAgent.start(); } catch(e){}
-        }
-    };
     window.speechSynthesis.speak(speech);
 }
 
@@ -55,7 +43,7 @@ if (voiceToggle) {
 }
 
 // ==========================================
-// 🎙️ Walkie Talkie Core Setup (AUTOSTART EXPLICITLY DISABLED)
+// 🎙️ Walkie Talkie Pipeline (FULLY BLOCKED ON SITE LOAD)
 // ==========================================
 let isWalkieTalkieActive = false;
 let speechRecognitionAgent = null;
@@ -63,21 +51,18 @@ let speechRecognitionAgent = null;
 function initSpeechRecognitionPipeline() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-    
     speechRecognitionAgent = new SpeechRecognition();
     speechRecognitionAgent.continuous = false;
     speechRecognitionAgent.interimResults = false;
     speechRecognitionAgent.lang = "hi-IN";
-
     speechRecognitionAgent.onresult = (event) => {
-        const capturedText = event.results[0][0].transcript;
-        if (capturedText.trim() !== "") sendMessage(capturedText);
-    };
-    speechRecognitionAgent.onerror = () => {
-        if (isWalkieTalkieActive) { try { speechRecognitionAgent.start(); } catch(e){} }
+        const text = event.results[0][0].transcript;
+        if (text.trim() !== "") sendMessage(text);
     };
     speechRecognitionAgent.onend = () => {
-        if (isWalkieTalkieActive && !window.speechSynthesis.speaking) { try { speechRecognitionAgent.start(); } catch(e){} }
+        if (isWalkieTalkieActive && !window.speechSynthesis.speaking) { 
+            try { speechRecognitionAgent.start(); } catch(e){} 
+        }
     };
 }
 
@@ -85,8 +70,10 @@ window.stopWalkieTalkieMode = function() {
     isWalkieTalkieActive = false;
     const walkieBtn = document.getElementById("walkieTalkieToggle");
     if(walkieBtn) walkieBtn.style.background = "transparent";
+    
     const statusPanel = document.getElementById('voiceStatusPanel');
     if(statusPanel) statusPanel.style.setProperty('display', 'none', 'important');
+    
     if (speechRecognitionAgent) { try { speechRecognitionAgent.stop(); } catch(e){} }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
 };
@@ -97,25 +84,29 @@ if (walkieToggleBtn) {
         if (isWalkieTalkieActive) {
             stopWalkieTalkieMode();
         } else {
-            isWalkieTalkieActive = true;
+            isWalkieTalkieActive = true; 
             isVoiceReplyEnabled = true;
             if(voiceToggle) voiceToggle.innerText = "🔊";
             walkieToggleBtn.style.background = "#10b981";
-            document.getElementById('voiceStatusPanel').style.setProperty('display', 'flex', 'important');
+            
+            const statusPanel = document.getElementById('voiceStatusPanel');
+            if(statusPanel) statusPanel.style.setProperty('display', 'flex', 'important');
+            
             if (!speechRecognitionAgent) initSpeechRecognitionPipeline();
             try { speechRecognitionAgent.start(); } catch(e){}
         }
     });
 }
 
-// Ensure voice status panel is hidden explicitly on site initial load
+// Explicitly ensure mic panel is hidden and recognition is NOT running when site opens
 document.addEventListener("DOMContentLoaded", () => {
+    isWalkieTalkieActive = false;
     const statusPanel = document.getElementById('voiceStatusPanel');
     if(statusPanel) statusPanel.style.setProperty('display', 'none', 'important');
 });
 
 // ==========================================
-// 🗂️ Sidebar Storage Matrix Controls
+// 🗂️ Sidebar & Database System
 // ==========================================
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
@@ -127,76 +118,44 @@ const footerUserLabel = document.getElementById('footerUserLabel');
 if (sidebarOpenBtn) sidebarOpenBtn.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('active'); });
 if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', () => sidebar.classList.remove('active'));
 
-document.addEventListener('click', (e) => {
-    if (sidebar && sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== sidebarOpenBtn) {
-        sidebar.classList.remove('active');
-    }
-});
-
 function getLocalMemoryDB() {
     let db = localStorage.getItem("nova_memory_vault");
-    if (!db) {
-        db = JSON.stringify({ users: [], chats: [] });
-        localStorage.setItem("nova_memory_vault", db);
-    }
+    if (!db) { db = JSON.stringify({ users: [], chats: [] }); localStorage.setItem("nova_memory_vault", db); }
     try { return JSON.parse(db); } catch(e) { return { users: [], chats: [] }; }
 }
 
-function writeLocalMemoryDB(data) {
-    localStorage.setItem("nova_memory_vault", JSON.stringify(data));
-}
+function writeLocalMemoryDB(data) { localStorage.setItem("nova_memory_vault", JSON.stringify(data)); }
 
 function loadCloudChatHistory() {
     if (!chatHistoryList) return;
     const db = getLocalMemoryDB();
     const history = (db.chats || []).filter(c => c.userEmail === currentUserEmail).slice(-15).reverse();
-    
-    chatHistoryList.innerHTML = "";
-    if (history.length === 0) {
-        chatHistoryList.innerHTML = `<div style="font-size:12px; opacity:0.4; padding:10px;">No recent sessions</div>`;
-        return;
-    }
-
+    chatHistoryList.innerHTML = history.length === 0 ? `<div style="font-size:12px; opacity:0.4; padding:10px;">No recent sessions</div>` : "";
     history.forEach(log => {
-        const btn = document.createElement('button');
-        btn.className = "history-item-node";
-        btn.innerText = `💬 ${log.title}`;
+        const btn = document.createElement('button'); btn.className = "history-item-node"; btn.innerText = `💬 ${log.title}`;
         btn.addEventListener('click', () => {
             const chatBox = document.getElementById('chat');
-            chatBox.innerHTML = `
-                <div class="message user"><div class="msg-text">${log.prompt}</div></div>
-                <div class="message ai"><div class="msg-text">${log.response}</div></div>`;
-            renderMathFormulasSafely(chatBox);
-            sidebar.classList.remove('active');
+            chatBox.innerHTML = `<div class="message user"><div class="msg-text">${log.prompt}</div></div><div class="message ai"><div class="msg-text">${log.response}</div></div>`;
+            renderMathFormulasSafely(chatBox); sidebar.classList.remove('active');
         });
         chatHistoryList.appendChild(btn);
     });
 }
-
-if(newChatBtn) {
-    newChatBtn.addEventListener('click', () => {
-        document.getElementById('chat').innerHTML = `<div class="message ai"><div class="msg-text">New chat thread active.</div></div>`;
-        sidebar.classList.remove('active');
-    });
-}
+if(newChatBtn) newChatBtn.addEventListener('click', () => { document.getElementById('chat').innerHTML = `<div class="message ai"><div class="msg-text">New thread active.</div></div>`; sidebar.classList.remove('active'); });
 
 if (footerUserLabel) footerUserLabel.innerText = currentUserName;
 loadCloudChatHistory();
 
-// ==========================================
-// Unified File Input Handlers
-// ==========================================
+// Dynamic Attachments Engine
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
+        const file = e.target.files[0]; if (!file) return;
         const targetType = this.getAttribute('data-target-type');
         const reader = new FileReader();
         reader.onload = function(evt) {
             const rawBase64 = evt.target.result.split(',')[1];
-            if (targetType === 'image') imageBase64 = rawBase64;
-            else uploadedFileData = rawBase64;
+            if (targetType === 'image') imageBase64 = rawBase64; else uploadedFileData = rawBase64;
             uploadedFileName = file.name; uploadedFileType = targetType;
             document.getElementById('previewName').textContent = `📎 Ready: ${file.name}`;
             document.getElementById('previewContainer').style.display = 'flex';
@@ -204,16 +163,10 @@ if (masterFileInput) {
         reader.readAsDataURL(file);
     });
 }
-
-document.getElementById('cancelPreview').addEventListener('click', clearPreview);
-function clearPreview() {
-    imageBase64 = null; uploadedFileData = null; uploadedFileName = null; uploadedFileType = null;
-    document.getElementById('previewContainer').style.display = 'none';
-    if(masterFileInput) masterFileInput.value = '';
-}
+document.getElementById('cancelPreview').addEventListener('click', () => { imageBase64 = null; uploadedFileData = null; document.getElementById('previewContainer').style.display = 'none'; });
 
 // ==========================================
-// Core Messaging Pipeline Network Matrix
+// Central Communications Pipeline Mode Engine
 // ==========================================
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
@@ -232,72 +185,50 @@ async function sendMessage(text) {
     lastUserPrompt = text;
     const mode = (typeof activeGenerationMode !== "undefined") ? activeGenerationMode : "chat";
     const ratio = document.getElementById("aspectRatio") ? document.getElementById("aspectRatio").value : "16:9";
-
-    const displayPrompt = text || `Uploaded Asset file: [${uploadedFileName}]`;
-    const userMsgId = "user-" + Date.now();
-    appendMessage('user', displayPrompt, null, null, userMsgId);
+    const displayPrompt = text || `Uploaded File structure Asset: [${uploadedFileName}]`;
+    
+    appendMessage('user', displayPrompt, null, null, "user-" + Date.now());
     if(messageInput) messageInput.value = '';
-    
     const loadingId = appendLoading();
-    
-    const payload = {
-        message: text, generationMode: mode, aspectRatio: ratio,
-        image: imageBase64, fileData: uploadedFileData, fileName: uploadedFileName, fileType: uploadedFileType
-    };
-    clearPreview();
+
+    const payload = { message: text, generationMode: mode, aspectRatio: ratio, image: imageBase64, fileData: uploadedFileData, fileType: uploadedFileType };
+    imageBase64 = null; uploadedFileData = null; document.getElementById('previewContainer').style.display = 'none';
 
     try {
-        const response = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        const contentType = response.headers.get("content-type");
-        let data;
-        if (contentType && contentType.includes("application/json")) {
-            data = await response.json();
-        } else {
-            const rawTxt = await response.text();
-            data = { reply: `⚠️ Server Internal Matrix String Error: ${rawTxt.substring(0, 80)}` };
-        }
-
+        const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const data = await response.json();
         removeLoading(loadingId);
 
-        if (data && (data.reply || data.mediaUrl)) {
-            const aiMsgId = "ai-" + Date.now();
-            appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType, aiMsgId);
+        if (data) {
+            appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType, "ai-" + Date.now());
             if (isVoiceReplyEnabled && data.reply) speakText(data.reply);
             
-            if (mode === "chat" && data.reply && !data.reply.startsWith("⚠️")) {
+            if (mode === "chat" && data.reply) {
                 const db = getLocalMemoryDB();
                 const logTitle = displayPrompt.length > 20 ? displayPrompt.substring(0, 20) + "..." : displayPrompt;
                 if(!db.chats) db.chats = [];
                 db.chats.push({ userEmail: currentUserEmail, title: logTitle, prompt: displayPrompt, response: data.reply });
-                writeLocalMemoryDB(db);
-                loadCloudChatHistory();
+                writeLocalMemoryDB(db); loadCloudChatHistory();
             }
         }
     } catch (error) {
         removeLoading(loadingId);
-        appendMessage('ai', `⚠️ Synchronization Interrupt: ${error.message}`, null, null, "err-" + Date.now());
+        appendMessage('ai', `⚠️ Sync Error: ${error.message}`);
     }
 }
 
 function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "") {
-    const div = document.createElement('div');
-    div.className = `message ${sender}`; div.id = `msg-${id}`;
-    
+    const div = document.createElement('div'); div.className = `message ${sender}`; div.id = `msg-${id}`;
     let html = `<div class="msg-text">`;
     if (sender === 'ai' && typeof marked !== 'undefined' && text) html += marked.parse(text);
     else html += (text || "").replace(/\n/g, '<br>');
     html += `</div>`;
 
-    if (sender === 'ai' && mediaUrl) {
+    if (mediaUrl) {
         html += `<div class="media-container" style="margin-top:12px;">`;
         if (mediaType === 'image') html += `<img src="${mediaUrl}" style="max-width:100%; border-radius:12px;">`;
-        else if (mediaType === 'video') html += `<video src="${mediaUrl}" controls style="width:100%; border-radius:12px;"></video>`;
-        else if (mediaType === 'audio') html += `<audio src="${mediaUrl}" controls style="width:100%;"></audio>`;
+        else if (mediaType === 'video') html += `<video src="${mediaUrl}" controls style="width:100%; border-radius:12px;" autoplay></video>`;
+        else if (mediaType === 'audio') html += `<audio src="${mediaUrl}" controls style="width:100%;" autoplay></audio>`;
         html += `</div>`;
     }
 
@@ -309,146 +240,65 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
         <span class="action-icon" onclick="window.triggerMessageEdit(this, '${id}')">✏️ Edit</span>
         <span class="action-icon" style="margin-left:8px;" onclick="window.triggerDelete('${id}')">🗑️ Del</span>`;
 
-    html += `<div class="msg-meta-bar">${controls}</div>`;
-    div.innerHTML = html; chatContainer.appendChild(div);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
+    html += `<div class="msg-meta-bar">${controls}</div>`; div.innerHTML = html;
+    chatContainer.appendChild(div); chatContainer.scrollTop = chatContainer.scrollHeight;
     renderMathFormulasSafely(div);
-
-    if (sender === 'ai' && typeof hljs !== 'undefined') {
-        div.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
-    }
+    if (sender === 'ai' && typeof hljs !== 'undefined') div.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
 }
 
 function appendLoading() {
-    const id = 'load-' + Date.now();
-    const div = document.createElement('div');
-    div.className = 'message ai'; div.id = id;
-    div.innerHTML = `<div class="msg-text">Analyzing matrices and rendering output text... ⏳</div>`;
-    chatContainer.appendChild(div);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-    return id;
+    const id = 'load-' + Date.now(); const div = document.createElement('div'); div.className = 'message ai'; div.id = id;
+    div.innerHTML = `<div class="msg-text">Processing core media matrix asset... ⏳</div>`;
+    chatContainer.appendChild(div); chatContainer.scrollTop = chatContainer.scrollHeight; return id;
 }
 function removeLoading(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
-window.speakText = speakText;
 window.triggerDelete = function(id) { document.getElementById(`msg-${id}`)?.remove(); };
 window.triggerRegenerate = function() { if (lastUserPrompt) sendMessage(lastUserPrompt); };
-
 window.triggerMessageEdit = function(el, id) {
-    const textNode = el.parentElement.previousElementSibling;
-    const revisedText = prompt("Refactor message input:", textNode.innerText.trim());
-    if (revisedText && revisedText.trim() !== "") sendMessage(revisedText.trim());
+    const node = el.parentElement.previousElementSibling;
+    const text = prompt("Edit message:", node.innerText.trim());
+    if (text) sendMessage(text.trim());
 };
 
-// Menu Interfaces
-const attach = document.getElementById('attach');
-const attachMenu = document.getElementById('attachMenu');
+// Menu Actions
+const attach = document.getElementById('attach'); const attachMenu = document.getElementById('attachMenu');
 if(attach) attach.addEventListener('click', (e) => { e.stopPropagation(); attachMenu.classList.toggle('active'); });
 document.addEventListener('click', () => { if(attachMenu) attachMenu.classList.remove('active'); });
 
-const themeToggle = document.getElementById('themeToggle');
-if(themeToggle) {
-    themeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('dark-theme');
-    });
-}
-
-// ==========================================
-// 🔐 100% SECURE & FULL AUTHENTICATION SYSTEM
-// ==========================================
-const userProfile = document.getElementById('userProfile');
-const authOverlay = document.getElementById('authOverlay');
-
-if(userProfile && authOverlay) {
-    userProfile.addEventListener('click', () => {
-        authOverlay.style.display = 'flex';
-        authMode = "signin";
-        document.getElementById('authTitle').innerText = "Welcome back";
-        document.getElementById('authName').style.display = "none";
-        document.getElementById('authSubmitBtn').innerText = "Continue";
-        document.getElementById('authSwitchModeBtn').innerText = "Sign up";
-        document.getElementById('authSwitchPrompt').innerText = "Don't have an account?";
-    });
-}
+// Secure Authentication Overlay Integration Layout 
+const userProfile = document.getElementById('userProfile'); const authOverlay = document.getElementById('authOverlay');
+if(userProfile && authOverlay) userProfile.addEventListener('click', () => { authOverlay.style.display = 'flex'; authMode = "signin"; document.getElementById('authTitle').innerText = "Welcome back"; document.getElementById('authName').style.display = "none"; });
 
 if (authOverlay) {
     authOverlay.addEventListener('click', async (e) => {
-        const nameField = document.getElementById('authName');
-        const titleText = document.getElementById('authTitle');
-        const submitBtn = document.getElementById('authSubmitBtn');
-        const switchLink = document.getElementById('authSwitchModeBtn');
+        const nameField = document.getElementById('authName'); const titleText = document.getElementById('authTitle');
+        const submitBtn = document.getElementById('authSubmitBtn'); const switchLink = document.getElementById('authSwitchModeBtn');
         const switchPrompt = document.getElementById('authSwitchPrompt');
-
-        if (e.target.id === 'authCloseBtn') {
-            authOverlay.style.display = 'none';
-            return;
-        }
-
-        // Perfect Switch Link Handler For Sign Up / Sign In Toggles
+        if (e.target.id === 'authCloseBtn') { authOverlay.style.display = 'none'; return; }
         if (e.target.id === 'authSwitchModeBtn') {
             e.preventDefault();
             if (authMode === "signin") {
-                authMode = "signup"; 
-                titleText.innerText = "Create account";
-                if(nameField) nameField.style.display = "block";
-                submitBtn.innerText = "Sign Up";
-                switchLink.innerText = "Sign in";
-                if(switchPrompt) switchPrompt.innerText = "Already have an account?";
+                authMode = "signup"; titleText.innerText = "Create account"; nameField.style.display = "block"; submitBtn.innerText = "Sign Up"; switchLink.innerText = "Sign in"; if(switchPrompt) switchPrompt.innerText = "Already have an account?";
             } else {
-                authMode = "signin"; 
-                titleText.innerText = "Welcome back";
-                if(nameField) nameField.style.display = "none";
-                submitBtn.innerText = "Continue";
-                switchLink.innerText = "Sign up";
-                if(switchPrompt) switchPrompt.innerText = "Don't have an account?";
+                authMode = "signin"; titleText.innerText = "Welcome back"; nameField.style.display = "none"; submitBtn.innerText = "Continue"; switchLink.innerText = "Sign up"; if(switchPrompt) switchPrompt.innerText = "Don't have an account?";
             }
         }
-
-        // Google Authentication Logic
         if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
-            localStorage.setItem("novaUserEmail", "ayush@novamind.com");
-            localStorage.setItem("novaUserName", "Ayush Vercel");
-            currentUserEmail = "ayush@novamind.com"; 
-            currentUserName = "Ayush Vercel";
-            if(footerUserLabel) footerUserLabel.innerText = "Ayush Vercel";
-            authOverlay.style.display = 'none'; 
-            loadCloudChatHistory();
-            return;
+            localStorage.setItem("novaUserEmail", "ayush@novamind.com"); localStorage.setItem("novaUserName", "Ayush Vercel");
+            currentUserEmail = "ayush@novamind.com"; currentUserName = "Ayush Vercel"; if(footerUserLabel) footerUserLabel.innerText = "Ayush Vercel"; authOverlay.style.display = 'none'; loadCloudChatHistory(); return;
         }
-
-        // Traditional Submission Controller Block
         if (e.target.id === 'authSubmitBtn') {
-            const email = document.getElementById('authUsername')?.value.trim();
-            const pass = document.getElementById('authPassword')?.value.trim();
-            const name = nameField?.value.trim() || "User Node";
-
+            const email = document.getElementById('authUsername')?.value.trim(); const pass = document.getElementById('authPassword')?.value.trim(); const name = nameField?.value.trim() || "User Node";
             if (!email || !pass) return alert("Fields missing.");
-            
             const db = getLocalMemoryDB();
             if (authMode === "signup") {
-                if(!db.users) db.users = [];
-                const check = db.users.find(u => u.email === email);
-                if (check) return alert("User already active!");
-                
-                db.users.push({ email, pass, name });
-                writeLocalMemoryDB(db);
-                alert("Account deployed! Please sign in now.");
-                
-                authMode = "signup"; 
-                switchLink.click();
+                if(!db.users) db.users = []; if (db.users.find(u => u.email === email)) return alert("User already active!");
+                db.users.push({ email, pass, name }); writeLocalMemoryDB(db); alert("Account deployed!"); authMode = "signup"; switchLink.click();
             } else {
-                if(!db.users) db.users = [];
-                const check = db.users.find(u => u.email === email && u.pass === pass);
-                if (!check) return alert("Wrong credentials.");
-                
-                localStorage.setItem("novaUserEmail", check.email);
-                localStorage.setItem("novaUserName", check.name);
-                currentUserEmail = check.email; 
-                currentUserName = check.name;
-                if(footerUserLabel) footerUserLabel.innerText = check.name;
-                authOverlay.style.display = 'none'; 
-                loadCloudChatHistory();
+                const check = db.users.find(u => u.email === email && u.pass === pass); if (!check) return alert("Wrong credentials.");
+                localStorage.setItem("novaUserEmail", check.email); localStorage.setItem("novaUserName", check.name);
+                currentUserEmail = check.email; currentUserName = check.name; if(footerUserLabel) footerUserLabel.innerText = check.name; authOverlay.style.display = 'none'; loadCloudChatHistory();
             }
         }
     });
