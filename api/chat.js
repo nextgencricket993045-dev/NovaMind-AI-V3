@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-        return res.status(200).json({ reply: "⚠️ Gemini API key missing from environment configuration." });
+        return res.status(200).json({ reply: "⚠️ Gemini API key missing from configuration." });
     }
 
     let finalMediaUrl = null; 
@@ -20,20 +20,13 @@ export default async function handler(req, res) {
     let resHeight = 720;
     if (aspectRatio === "1:1") { resWidth = 1024; resHeight = 1024; }
 
-    const targetQuery = (message && message.trim() !== "") ? message.trim() : "creative design";
+    const targetQuery = (message && message.trim() !== "") ? message.trim() : "masterpiece artwork";
     const cleanPrompt = encodeURIComponent(targetQuery.replace(/[^a-zA-Z0-9 ]/g, "").trim());
     const randomSeed = Math.floor(Math.random() * 9999999);
 
-    // 🔥 DYNAMIC FIXED GENERATION ROUTING PATHS
     if (generationMode === "image") {
         finalMediaType = "image";
         finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}?width=${resWidth}&height=${resHeight}&seed=${randomSeed}&enhance=true&nologo=true`;
-    } else if (generationMode === "video") {
-        finalMediaType = "video";
-        finalMediaUrl = `https://image.pollinations.ai/p/${cleanPrompt}%20cinematic%20motion%20gif?width=${resWidth}&height=${resHeight}&seed=${randomSeed}&feed=true`;
-    } else if (generationMode === "audio") {
-        finalMediaType = "audio";
-        finalMediaUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Brian&text=${cleanPrompt}`;
     }
 
     let partsArray = [];
@@ -41,12 +34,11 @@ export default async function handler(req, res) {
     if (fileData) {
         let mime = "application/pdf";
         if (fileType === "txt") mime = "text/plain";
-        else if (fileType === "video") mime = "video/mp4";
         partsArray.push({ inlineData: { mimeType: mime, data: fileData } });
     }
     partsArray.push({ text: targetQuery });
 
-    const systemRules = "You are NovaMind AI V4, an outstanding online school teacher. Explain everything in clean Hindi-English (Hinglish) using bold headers. ALWAYS format math using inline delimiters like $a_n$ or blocks like $$\\frac{1}{3}$$. ALWAYS append a beautiful '📊 DISCOVERABILITY & SEO METRICS' block with 3 High-CTR Titles, 10 tags, and 5 hashtags at the bottom.";
+    const systemRules = "You are NovaMind AI V4, an outstanding online school teacher. Explain everything in clean Hindi-English (Hinglish) using bold headers and bullets. Formulate math using delimiters like $a_n$ or blocks like $$\\frac{1}{3}$$. ALWAYS append '📊 DISCOVERABILITY & SEO METRICS' with 3 High-CTR Titles, 10 tags, and 5 hashtags at the bottom.";
 
     const requestBody = {
         contents: [{ parts: partsArray }],
@@ -57,7 +49,7 @@ export default async function handler(req, res) {
     try {
         let textReply = "";
         if (generationMode !== "chat") {
-            textReply = `✨ **NovaMind Premium Asset Engine Active**\n\n**Mode:** ${generationMode.toUpperCase()} Generation Ready\n\nAapka dynamic multimedia file node niche output container me attach ho chuka hai. Controls use karein.`;
+            textReply = `✨ **NovaMind Premium Image Ready!**\n\nAapki creative HD image niche live render ho chuki hai. Right click karke save karein.`;
             return res.status(200).json({ reply: textReply, mediaUrl: finalMediaUrl, mediaType: finalMediaType });
         }
 

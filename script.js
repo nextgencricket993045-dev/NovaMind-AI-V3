@@ -44,19 +44,17 @@ if (voiceToggle) {
 }
 
 // ====================================================================
-// 🎙️ WALKIETALKIE DYNAMIC CONTROLLER (0% INITIAL PAGE LOAD SURFACE)
+// 🎙️ WALKIETALKIE GUARD ENGINE (ABSOLUTE 0% AUTOSTART SURFACE)
 // ====================================================================
 let isWalkieTalkieActive = false;
 let speechRecognitionAgent = null;
 
-// Is function ko tab tak call nahi kiya ja sakta jab tak click true na ho
-function activateMicPipelineOnlyOnDemand() {
-    if (!isWalkieTalkieActive) return;
+function executeMicPipelineLifecycle() {
+    if (isWalkieTalkieActive !== true) return;
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    // Object creation strictly delayed until physical human button press
     if (!speechRecognitionAgent) {
         speechRecognitionAgent = new SpeechRecognition();
         speechRecognitionAgent.continuous = false;
@@ -92,9 +90,7 @@ window.stopWalkieTalkieMode = function() {
     if (window.speechSynthesis) window.speechSynthesis.cancel();
 };
 
-// 👑 Pure explicit user physical gesture entry target map
 window.triggerManualWalkieTalkie = function(e) {
-    // strict programmatic loads check protection block
     if (!e || !e.isTrusted || e.detail === 0) return; 
 
     if (isWalkieTalkieActive === true) {
@@ -110,12 +106,11 @@ window.triggerManualWalkieTalkie = function(e) {
         const statusPanel = document.getElementById('voiceStatusPanel');
         if(statusPanel) statusPanel.style.setProperty('display', 'flex', 'important');
 
-        // Execute processing pipeline only now!
-        activateMicPipelineOnlyOnDemand();
+        executeMicPipelineLifecycle();
     }
 };
 
-// Global Tab State Verification Loops
+// Global Tab Switcher Logic Restored
 window.switchGenerationMode = function(targetMode) {
     activeGenerationMode = targetMode;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -131,7 +126,7 @@ window.switchGenerationMode = function(targetMode) {
         if(ratioSelect) ratioSelect.style.display = "none";
     } else {
         if(mainInput) mainInput.placeholder = `Describe prompt to generate ${targetMode}...`;
-        if(ratioSelect) ratioSelect.style.display = (targetMode === "image" || targetMode === "video") ? "block" : "none";
+        if(ratioSelect) ratioSelect.style.display = "block";
     }
 };
 
@@ -179,7 +174,7 @@ function loadCloudChatHistory() {
 if (footerUserLabel) footerUserLabel.innerText = currentUserName;
 loadCloudChatHistory();
 
-// File Module Attachment Nodes
+// File Module Uploader Nodes
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
@@ -198,7 +193,7 @@ if (masterFileInput) {
 }
 document.getElementById('cancelPreview').addEventListener('click', () => { imageBase64 = null; uploadedFileData = null; document.getElementById('previewContainer').style.display = 'none'; });
 
-// Central Communications Pipeline
+// Central Messages Matrix Shell
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
 const chatContainer = document.getElementById('chat');
@@ -233,6 +228,14 @@ async function sendMessage(text) {
         if (data) {
             appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType, "ai-" + Date.now());
             if (isVoiceReplyEnabled && data.reply) speakText(data.reply);
+            
+            if (mode === "chat" && data.reply) {
+                const db = getLocalMemoryDB();
+                const logTitle = displayPrompt.length > 20 ? displayPrompt.substring(0, 20) + "..." : displayPrompt;
+                if(!db.chats) db.chats = [];
+                db.chats.push({ userEmail: currentUserEmail, title: logTitle, prompt: displayPrompt, response: data.reply });
+                writeLocalMemoryDB(db); loadCloudChatHistory();
+            }
         }
     } catch (error) {
         removeLoading(loadingId);
@@ -240,6 +243,7 @@ async function sendMessage(text) {
     }
 }
 
+// 🛠️ ALL CONTROLS FULLY RESTORED (Copy, Speak, Re-gen, Edit, Delete)
 function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "") {
     const div = document.createElement('div'); div.className = `message ${sender}`; div.id = `msg-${id}`;
     let html = `<div class="msg-text">`;
@@ -251,10 +255,6 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
         html += `<div class="media-container" style="margin-top:12px;">`;
         if (mediaType === 'image') {
             html += `<img src="${mediaUrl}" style="max-width:100%; border-radius:12px;">`;
-        } else if (mediaType === 'video') {
-            html += `<img src="${mediaUrl}" style="max-width:100%; border-radius:12px; border:2px solid #6366f1;">`;
-        } else if (mediaType === 'audio') {
-            html += `<audio src="${mediaUrl}" controls style="width:100%;" autoplay></audio>`;
         }
         html += `</div>`;
     }
@@ -262,21 +262,33 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
     const safe = (text || "").replace(/`/g, '\\`').replace(/\$/g, '\\$');
     let controls = sender === 'ai' ? `
         <span class="action-icon" onclick="if(event.isTrusted) navigator.clipboard.writeText(\`${safe}\`)">📋 Copy</span>
-        <span class="action-icon" style="margin-left:8px;" onclick="if(event.isTrusted) speakText(\`${safe}\`)">🔊 Speak</span>` : '';
+        <span class="action-icon" style="margin-left:8px;" onclick="if(event.isTrusted) speakText(\`${safe}\`)">🔊 Speak</span>
+        <span class="action-icon" style="margin-left:8px;" onclick="if(event.isTrusted) window.triggerRegenerate()">🔄 Re-gen</span>` : `
+        <span class="action-icon" onclick="if(event.isTrusted) window.triggerMessageEdit(this, '${id}')">✏️ Edit</span>
+        <span class="action-icon" style="margin-left:8px;" onclick="if(event.isTrusted) window.triggerDelete('${id}')">🗑️ Del</span>`;
 
     html += `<div class="msg-meta-bar">${controls}</div>`; div.innerHTML = html;
     chatContainer.appendChild(div); chatContainer.scrollTop = chatContainer.scrollHeight;
     renderMathFormulasSafely(div);
+    if (sender === 'ai' && typeof hljs !== 'undefined') div.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
 }
 
 function appendLoading() {
     const id = 'load-' + Date.now(); const div = document.createElement('div'); div.className = 'message ai'; div.id = id;
-    div.innerHTML = `<div class="msg-text">Processing cluster media matrix asset... ⏳</div>`;
+    div.innerHTML = `<div class="msg-text">Processing cluster parameters... ⏳</div>`;
     chatContainer.appendChild(div); chatContainer.scrollTop = chatContainer.scrollHeight; return id;
 }
 function removeLoading(id) { const el = document.getElementById(id); if (el) el.remove(); }
 
-// Theme Matrix Initialization Setup
+window.triggerDelete = function(id) { document.getElementById(`msg-${id}`)?.remove(); };
+window.triggerRegenerate = function() { if (lastUserPrompt) sendMessage(lastUserPrompt); };
+window.triggerMessageEdit = function(el, id) {
+    const node = el.parentElement.previousElementSibling;
+    const text = prompt("Edit message:", node.innerText.trim());
+    if (text) sendMessage(text.trim());
+};
+
+// Theme Toggle Engine
 const themeToggle = document.getElementById('themeToggle');
 if(themeToggle) {
     document.body.classList.add('dark-theme');
@@ -292,9 +304,7 @@ const attach = document.getElementById('attach'); const attachMenu = document.ge
 if(attach) attach.addEventListener('click', (e) => { e.stopPropagation(); attachMenu.classList.toggle('active'); });
 document.addEventListener('click', () => { if(attachMenu) attachMenu.classList.remove('active'); });
 
-// ==========================================
-// 🔐 Secure Authentication Framework
-// ==========================================
+// Authentication Overlay Integration Panels
 const userProfile = document.getElementById('userProfile'); const authOverlay = document.getElementById('authOverlay');
 if(userProfile && authOverlay) userProfile.addEventListener('click', () => { authOverlay.style.display = 'flex'; authMode = "signin"; document.getElementById('authTitle').innerText = "Welcome back"; document.getElementById('authName').style.display = "none"; });
 
