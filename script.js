@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Premium Stable Core Script Engine (All Features Fixed)
+// NovaMind AI V4 - Premium Stable Core Script Engine (Absolute Final)
 // ====================================================================
 
 let imageBase64 = null;
@@ -11,6 +11,21 @@ let authMode = "signin";
 
 let currentUserEmail = localStorage.getItem("novaUserEmail") || "guest_user";
 let currentUserName = localStorage.getItem("novaUserName") || "Guest Account";
+
+// 👑 KaTeX Math Rendering Engine Setup
+function renderMathFormulasSafely(element) {
+    if (typeof renderMathInElement !== "undefined") {
+        renderMathInElement(element, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false},
+                {left: '\\[', right: '\\]', display: true}
+            ],
+            throwOnError: false
+        });
+    }
+}
 
 function speakText(text) {
     if (!window.speechSynthesis) return;
@@ -135,9 +150,11 @@ function loadCloudChatHistory() {
         btn.className = "history-item-node";
         btn.innerText = `💬 ${log.title}`;
         btn.addEventListener('click', () => {
-            document.getElementById('chat').innerHTML = `
+            const chatBox = document.getElementById('chat');
+            chatBox.innerHTML = `
                 <div class="message user"><div class="msg-text">${log.prompt}</div></div>
                 <div class="message ai"><div class="msg-text">${log.response}</div></div>`;
+            renderMathFormulasSafely(chatBox);
             sidebar.classList.remove('active');
         });
         chatHistoryList.appendChild(btn);
@@ -201,8 +218,6 @@ async function sendMessage(text) {
     const ratio = document.getElementById("aspectRatio") ? document.getElementById("aspectRatio").value : "16:9";
 
     const displayPrompt = text || `Uploaded Asset file: [${uploadedFileName}]`;
-    
-    // Dynamic distinct user ID generated for target alignment
     const userMsgId = "user-" + Date.now();
     appendMessage('user', displayPrompt, null, null, userMsgId);
     if(messageInput) messageInput.value = '';
@@ -253,11 +268,9 @@ async function sendMessage(text) {
     }
 }
 
-// 💬 RE-BUILT AND FULLY IMMUTABLE DOM RENDER MATRIX WITH CONTROLS TRACE
 function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "") {
     const div = document.createElement('div');
-    div.className = `message ${sender}`; 
-    div.id = `msg-${id}`;
+    div.className = `message ${sender}`; div.id = `msg-${id}`;
     
     let html = `<div class="msg-text">`;
     if (sender === 'ai' && typeof marked !== 'undefined' && text) html += marked.parse(text);
@@ -273,8 +286,6 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
     }
 
     const safe = (text || "").replace(/`/g, '\\`').replace(/\$/g, '\\$');
-    
-    // 🛠️ RESTORED COMPLETE EVENT LOOKUPS (EDIT / DELETE / REGEN KEYS LOCKED)
     let controls = sender === 'ai' ? `
         <span class="action-icon" onclick="navigator.clipboard.writeText(\`${safe}\`)">📋 Copy</span>
         <span class="action-icon" style="margin-left:8px;" onclick="speakText(\`${safe}\`)">🔊 Speak</span>
@@ -283,9 +294,11 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
         <span class="action-icon" style="margin-left:8px;" onclick="window.triggerDelete('${id}')">🗑️ Del</span>`;
 
     html += `<div class="msg-meta-bar">${controls}</div>`;
-    div.innerHTML = html; 
-    chatContainer.appendChild(div);
+    div.innerHTML = html; chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    // 👑 Auto Render Math Formulas via KaTeX instantly on inject
+    renderMathFormulasSafely(div);
 
     if (sender === 'ai' && typeof hljs !== 'undefined') {
         div.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
@@ -296,7 +309,7 @@ function appendLoading() {
     const id = 'load-' + Date.now();
     const div = document.createElement('div');
     div.className = 'message ai'; div.id = id;
-    div.innerHTML = `<div class="msg-text">Processing stream matrices... ⏳</div>`;
+    div.innerHTML = `<div class="msg-text">Analyzing matrices and rendering output text... ⏳</div>`;
     chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
     return id;
@@ -307,15 +320,10 @@ window.speakText = speakText;
 window.triggerDelete = function(id) { document.getElementById(`msg-${id}`)?.remove(); };
 window.triggerRegenerate = function() { if (lastUserPrompt) sendMessage(lastUserPrompt); };
 
-// ✏️ Global Explicit Window Bindings for User Message Edits
 window.triggerMessageEdit = function(el, id) {
     const textNode = el.parentElement.previousElementSibling;
-    const currentText = textNode.innerText || textNode.textContent;
-    const revisedText = prompt("Refactor or Edit message input:", currentText.trim());
-    if (revisedText && revisedText.trim() !== "") {
-        textNode.innerHTML = revisedText.replace(/\n/g, '<br>');
-        sendMessage(revisedText.trim());
-    }
+    const revisedText = prompt("Refactor message input:", textNode.innerText.trim());
+    if (revisedText && revisedText.trim() !== "") sendMessage(revisedText.trim());
 };
 
 // Menu Interfaces
@@ -328,7 +336,6 @@ const themeToggle = document.getElementById('themeToggle');
 if(themeToggle) {
     themeToggle.addEventListener('click', () => {
         document.body.classList.toggle('dark-theme');
-        localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
     });
 }
 

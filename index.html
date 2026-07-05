@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovaMind AI V4 - Premium Studio</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#212121">
+    <link rel="stylesheet" href="style.css?v=4.1">
+    
+    <!-- Premium Math Auto Render Libraries (KaTeX) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -34,18 +42,18 @@
                 <div class="logo">🤖 NovaMind AI</div>
             </div>
             <div style="display: flex; gap: 8px; align-items: center;">
-                <button id="walkieTalkieToggle" class="theme-btn" title="Start Continuous Voice Conversation Mode" style="background: rgba(99,102,241,0.1); border-radius: 50%; width:36px; height:36px; font-size:15px;">🎙️</button>
+                <button id="walkieTalkieToggle" class="theme-btn" title="Start Continuous Voice Mode">🎙️</button>
                 <button id="voiceReplyToggle" class="theme-btn" title="Toggle AI Audio Synthesis">🔊</button>
                 <button id="themeToggle" class="theme-btn">🌙</button>
             </div>
         </header>
 
-        <div id="voiceStatusPanel" style="display: none; background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 12px 20px; color: white; border-radius: 12px; margin: 10px 20px 0 20px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(99,102,241,0.3);">
+        <div id="voiceStatusPanel" style="display: none; background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 12px 20px; color: white; border-radius: 12px; margin: 10px 20px 0 20px; font-size: 14px; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span id="voiceStatusIndicator" class="pulse-dot">🔴</span>
-                <span id="voiceStatusText">Walkie-Talkie Active: Listening to you...</span>
+                <span id="voiceStatusText">Walkie-Talkie Active...</span>
             </div>
-            <button onclick="stopWalkieTalkieMode()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight:600;">Stop</button>
+            <button onclick="stopWalkieTalkieMode()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;">Stop</button>
         </div>
 
         <div class="mode-tabs">
@@ -63,7 +71,7 @@
 
         <div id="chat" class="chat">
             <div class="message ai" id="msg-welcome-init">
-                <div class="msg-text">Workspace operational. Click the 🎙️ icon in the header to talk directly with NovaMind AI.</div>
+                <div class="msg-text">Workspace Active. Math renderer formulas and structural layout guards are deployed. 👍</div>
             </div>
         </div>
 
@@ -93,29 +101,17 @@
 <div id="authOverlay" class="auth-page-overlay" style="display:none;">
     <div class="auth-card">
         <h2 id="authTitle">Welcome back</h2>
-        <p id="authSubtitle" style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Cloud storage parameter setup</p>
-        <button id="googleAuthBtn" class="auth-btn google-btn">Continue with Google</button>
-        <div class="auth-divider"><span>OR</span></div>
-        <div class="auth-form-group">
-            <input type="text" id="authName" placeholder="Full Name" style="display: none;">
-            <input type="email" id="authUsername" placeholder="Email address">
-            <input type="password" id="authPassword" placeholder="Password">
-        </div>
+        <input type="text" id="authName" placeholder="Full Name" style="display: none; width:100%; padding:10px; margin:5px 0;">
+        <input type="email" id="authUsername" placeholder="Email address" style="width:100%; padding:10px; margin:5px 0;">
+        <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:10px; margin:5px 0;">
         <button id="authSubmitBtn" class="auth-btn primary-submit-btn">Continue</button>
-        <div style="margin-top: 16px; text-align: center; font-size: 13px;">
-            <span id="authSwitchPrompt" style="color: #94a3b8;">Don't have an account?</span>
-            <a href="#" id="authSwitchModeBtn" style="color: #6366f1; text-decoration: none; font-weight: 600; margin-left: 4px;">Sign up</a>
-        </div>
-        <button id="authCloseBtn" class="auth-btn cancel-btn" style="margin-top: 12px;">Cancel</button>
+        <button id="authCloseBtn" class="auth-btn cancel-btn">Cancel</button>
     </div>
 </div>
 
-<script src="script.js"></script>
+<script src="script.js?v=4.1"></script>
 <script>
     let activeGenerationMode = "chat";
-    // Hide panel grid container initial override explicitly
-    document.getElementById('voiceStatusPanel').style.setProperty('display', 'none', 'important');
-
     function triggerFileSelect(type) {
         const input = document.getElementById('masterFileInput');
         if(type === 'image') input.accept = "image/*";
@@ -142,6 +138,12 @@
             mainInput.placeholder = `Describe prompt to generate ${targetMode}...`;
             ratioSelect.style.display = (targetMode === "image" || targetMode === "video") ? "block" : "none";
         }
+    }
+
+    if ('serviceWorker' in navigator) {
+        window.navigator.serviceWorker.getRegistrations().then(registrations => {
+            for(let registration of registrations) { registration.unregister(); }
+        });
     }
 </script>
 </body>
