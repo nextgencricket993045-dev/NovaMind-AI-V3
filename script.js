@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Premium Frontend Engine (100% Core Fix)
+// NovaMind AI V4 - Premium Master Engine (100% Fixed & Verified)
 // ====================================================================
 
 let imageBase64 = null;
@@ -35,7 +35,7 @@ if (voiceToggleEl) {
 }
 
 // ==========================================
-// 🗂️ Sidebar State Navigation Engine
+// 🗂️ Sidebar Controls Setup
 // ==========================================
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
@@ -99,7 +99,7 @@ if(newChatBtn) {
 updateSidebarHistoryUI();
 
 // ==========================================
-// File Upload & Preview Handlers
+// File Upload Preview Core Logic
 // ==========================================
 const fileInputs = ['image', 'video', 'pdf', 'docx', 'txt'];
 fileInputs.forEach(id => {
@@ -133,7 +133,7 @@ function clearPreview() {
 }
 
 // ==========================================
-// UI & Menu Interactions
+// Attach Menu Controls
 // ==========================================
 const attachBtn = document.getElementById('attach');
 const attachMenu = document.getElementById('attachMenu');
@@ -161,7 +161,7 @@ if(themeToggle) {
 if (localStorage.getItem('theme') === 'light') document.body.classList.remove('dark-theme');
 
 // ==========================================
-// Core Messaging Pipeline (100% FIXED VALIDATION)
+// Core Messaging Pipeline
 // ==========================================
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
@@ -241,7 +241,7 @@ async function sendMessage(text) {
 }
 
 // ==========================================
-// Chat UI Rendering Engine
+// Chat DOM Layout Injector Framework
 // ==========================================
 function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "") {
     const msgDiv = document.createElement('div');
@@ -342,44 +342,11 @@ window.triggerRegenerate = function() {
 };
 
 // ==========================================
-// 👤 Authentic ChatGPT Authentication Pipeline
+// 👤 ChatGPT Style Authentic Auth System Logic
 // ==========================================
 const userProfileBtn = document.getElementById('userProfile');
 let authOverlay = document.getElementById('authOverlay');
 const footerUserLabel = document.getElementById('footerUserLabel');
-
-if (authOverlay) {
-    authOverlay.style.cssText = "position:fixed; top:0; left:0; right:0; bottom:0; background:#0b0f19; z-index:2500; display:none; align-items:center; justify-content:center; padding:20px; font-family:sans-serif;";
-    authOverlay.innerHTML = `
-        <div class="auth-box" style="background:#111827; padding:40px 32px; border-radius:12px; width:100%; max-width:400px; color:#fff; border:1px solid #1f2937; box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);">
-            <div style="text-align:center;">
-                <h2 id="authTitle" style="font-size:32px; font-weight:700; margin-bottom:8px;">Welcome to NovaMind</h2>
-                <p id="authSubtitle" style="margin-bottom:24px; color:#94a3b8; font-size:14px;">Log in or sign up with your account parameters to continue</p>
-            </div>
-            
-            <button id="googleAuthBtn" class="auth-btn google-btn" style="width:100%; padding:14px; border-radius:6px; font-size:16px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:12px; background:#fff; color:#1f2937; border:1px solid #d1d5db; box-sizing:border-box;">
-                <img src="https://fonts.gstatic.com/s/i/productlogos/googleg/v6/web-24dp/copy_of_web-24dp.png" width="18" alt="Google">
-                Continue with Google
-            </button>
-
-            <div class="auth-divider" style="display:flex; align-items:center; margin:20px 0; color:#4b5563; font-size:12px; font-weight:600;"><span style="flex:1; border-bottom:1px solid #1f2937;"></span><span style="padding:0 10px;">OR</span><span style="flex:1; border-bottom:1px solid #1f2937;"></span></div>
-
-            <div class="auth-form-group">
-                <input type="text" id="authName" placeholder="Full Name" style="display:none; width:100%; padding:14px 16px; margin:10px 0; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#fff; font-size:16px; box-sizing:border-box;">
-                <input type="email" id="authUsername" placeholder="Email address" style="width:100%; padding:14px 16px; margin:10px 0; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#fff; font-size:16px; box-sizing:border-box;">
-                <input type="password" id="authPassword" placeholder="Password" style="width:100%; padding:14px 16px; margin:10px 0; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#fff; font-size:16px; box-sizing:border-box;">
-            </div>
-
-            <button id="authSubmitBtn" class="auth-btn primary-submit-btn" style="width:100%; padding:14px; border-radius:6px; font-size:16px; font-weight:600; cursor:pointer; background:#10b981; color:#fff; border:none; margin-top:15px; box-sizing:border-box;">Continue</button>
-            
-            <div class="auth-footer-toggle" style="margin-top:24px; text-align:center; font-size:14px; color:#94a3b8;">
-                <span id="authSwitchPrompt">Don't have an account?</span>
-                <a href="#" id="authSwitchModeBtn" style="color:#10b981; text-decoration:none; font-weight:500; margin-left:4px;">Sign up</a>
-            </div>
-
-            <button id="authCloseBtn" class="auth-btn cancel-btn" style="width:100%; padding:10px; border-radius:6px; background:transparent; color:#94a3b8; border:1px solid #374151; margin-top:12px; font-size:14px; cursor:pointer;">Back to Workspace</button>
-        </div>`;
-}
 
 let authMode = "signin";
 
@@ -394,7 +361,7 @@ if (savedUser && footerUserLabel) {
 
 if (userProfileBtn && authOverlay) {
     userProfileBtn.addEventListener('click', () => {
-        authOverlay.style.display = 'flex';
+        authOverlay.style.cssText = "position:fixed; top:0; left:0; right:0; bottom:0; background:#0b0f19; z-index:2500; display:flex; align-items:center; justify-content:center; padding:20px; font-family:sans-serif;";
     });
 }
 
@@ -434,12 +401,52 @@ if (authOverlay) {
 
         if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
             localStorage.setItem("novaSessionToken", "oauth_google_verified");
-            localStorage.setItem("currentUser", "Ayush (Google Connected)");
-            if(footerUserLabel) footerUserLabel.innerText = "Ayush (Google Connected)";
+            localStorage.setItem("currentUser", "Ayush (Google)");
+            if(footerUserLabel) footerUserLabel.innerText = "Ayush (Google)";
             
             const initBlock = document.getElementById("msg-welcome-init");
             if(initBlock) {
                 initBlock.querySelector(".msg-text").innerHTML = `Hello Ayush 👋<br><br>NovaMind Enterprise updated. Google Authentication parameters securely synced.`;
             }
             alert("Authorized State established via Google! 🔐");
-            authOverlay.
+            authOverlay.style.display = 'none';
+        }
+
+        if (e.target.id === 'authSubmitBtn') {
+            const email = document.getElementById('authUsername')?.value.trim();
+            const pass = document.getElementById('authPassword')?.value.trim();
+            const name = nameField?.value.trim();
+            let userDb = JSON.parse(localStorage.getItem("nova_mock_users"));
+
+            if (!email || !pass) {
+                alert("Please populate the required fields correctly.");
+                return;
+            }
+
+            if (authMode === "signup") {
+                if (!name) { alert("Name mapping parameter missing."); return; }
+                if (userDb.some(u => u.email === email)) { alert("User configuration already exist."); return; }
+                userDb.push({email, pass, name});
+                localStorage.setItem("nova_mock_users", JSON.stringify(userDb));
+                localStorage.setItem("currentUser", name);
+                if(footerUserLabel) footerUserLabel.innerText = name;
+            } else {
+                const matchedRecord = userDb.find(u => u.email === email && u.pass === pass);
+                if (matchedRecord) {
+                    localStorage.setItem("currentUser", matchedRecord.name);
+                    if(footerUserLabel) footerUserLabel.innerText = matchedRecord.name;
+                } else {
+                    alert("Authentication mapping mismatch. Check fields or sign up.");
+                    return;
+                }
+            }
+
+            const activeSessionLabel = localStorage.getItem("currentUser") || "Ayush";
+            const initBlock = document.getElementById("msg-welcome-init");
+            if(initBlock) {
+                initBlock.querySelector(".msg-text").innerHTML = `Hello ${activeSessionLabel} 👋<br><br>NovaMind Enterprise dashboard updated. Workspace profile loaded.`;
+            }
+            authOverlay.style.display = 'none';
+        }
+    });
+}
