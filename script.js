@@ -43,7 +43,7 @@ if (voiceToggle) {
 }
 
 // ==========================================
-// 🎙️ Walkie Talkie Pipeline (FULLY BLOCKED ON SITE LOAD)
+// 🎙️ Walkie Talkie Pipeline (STRICT USER-CLICK ONLY DEPLOYMENT)
 // ==========================================
 let isWalkieTalkieActive = false;
 let speechRecognitionAgent = null;
@@ -60,6 +60,7 @@ function initSpeechRecognitionPipeline() {
         if (text.trim() !== "") sendMessage(text);
     };
     speechRecognitionAgent.onend = () => {
+        // Only restart if the user explicitly kept the mode alive
         if (isWalkieTalkieActive && !window.speechSynthesis.speaking) { 
             try { speechRecognitionAgent.start(); } catch(e){} 
         }
@@ -80,7 +81,11 @@ window.stopWalkieTalkieMode = function() {
 
 const walkieToggleBtn = document.getElementById("walkieTalkieToggle");
 if (walkieToggleBtn) {
-    walkieToggleBtn.addEventListener("click", () => {
+    // Pure user gesture validation target
+    walkieToggleBtn.addEventListener("click", (event) => {
+        // Guard checking against automated phantom clicks
+        if (!event.isTrusted) return; 
+        
         if (isWalkieTalkieActive) {
             stopWalkieTalkieMode();
         } else {
@@ -98,15 +103,13 @@ if (walkieToggleBtn) {
     });
 }
 
-// Explicitly ensure mic panel is hidden and recognition is NOT running when site opens
-document.addEventListener("DOMContentLoaded", () => {
-    isWalkieTalkieActive = false;
-    const statusPanel = document.getElementById('voiceStatusPanel');
-    if(statusPanel) statusPanel.style.setProperty('display', 'none', 'important');
-});
+// Clean system reset matrix on initial load
+isWalkieTalkieActive = false;
+const statusPanelInit = document.getElementById('voiceStatusPanel');
+if(statusPanelInit) statusPanelInit.style.setProperty('display', 'none', 'important');
 
 // ==========================================
-// 🗂️ Sidebar & Database System
+// 🗂️ Sidebar & Session History Controls
 // ==========================================
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
@@ -117,6 +120,12 @@ const footerUserLabel = document.getElementById('footerUserLabel');
 
 if (sidebarOpenBtn) sidebarOpenBtn.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('active'); });
 if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', () => sidebar.classList.remove('active'));
+
+document.addEventListener('click', (e) => {
+    if (sidebar && sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== sidebarOpenBtn) {
+        sidebar.classList.remove('active');
+    }
+});
 
 function getLocalMemoryDB() {
     let db = localStorage.getItem("nova_memory_vault");
@@ -146,7 +155,7 @@ if(newChatBtn) newChatBtn.addEventListener('click', () => { document.getElementB
 if (footerUserLabel) footerUserLabel.innerText = currentUserName;
 loadCloudChatHistory();
 
-// Dynamic Attachments Engine
+// Dynamic File Input Handlers
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
@@ -165,9 +174,7 @@ if (masterFileInput) {
 }
 document.getElementById('cancelPreview').addEventListener('click', () => { imageBase64 = null; uploadedFileData = null; document.getElementById('previewContainer').style.display = 'none'; });
 
-// ==========================================
-// Central Communications Pipeline Mode Engine
-// ==========================================
+// Central Communications Pipeline
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
 const chatContainer = document.getElementById('chat');
@@ -226,9 +233,13 @@ function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "")
 
     if (mediaUrl) {
         html += `<div class="media-container" style="margin-top:12px;">`;
-        if (mediaType === 'image') html += `<img src="${mediaUrl}" style="max-width:100%; border-radius:12px;">`;
-        else if (mediaType === 'video') html += `<video src="${mediaUrl}" controls style="width:100%; border-radius:12px;" autoplay></video>`;
-        else if (mediaType === 'audio') html += `<audio src="${mediaUrl}" controls style="width:100%;" autoplay></audio>`;
+        if (mediaType === 'image') {
+            html += `<img src="${mediaUrl}" style="max-width:100%; border-radius:12px;">`;
+        } else if (mediaType === 'video') {
+            html += `<video src="${mediaUrl}" controls style="width:100%; border-radius:12px;" autoplay loop muted playsinline></video>`;
+        } else if (mediaType === 'audio') {
+            html += `<audio src="${mediaUrl}" controls style="width:100%;" autoplay></audio>`;
+        }
         html += `</div>`;
     }
 
@@ -261,12 +272,23 @@ window.triggerMessageEdit = function(el, id) {
     if (text) sendMessage(text.trim());
 };
 
-// Menu Actions
+// Menu Elements Mapping
 const attach = document.getElementById('attach'); const attachMenu = document.getElementById('attachMenu');
 if(attach) attach.addEventListener('click', (e) => { e.stopPropagation(); attachMenu.classList.toggle('active'); });
 document.addEventListener('click', () => { if(attachMenu) attachMenu.classList.remove('active'); });
 
-// Secure Authentication Overlay Integration Layout 
+// Theme Matrix Initialization Setup
+const themeToggle = document.getElementById('themeToggle');
+if(themeToggle) {
+    document.body.classList.add('dark-theme');
+    themeToggle.innerText = "🌙";
+    themeToggle.addEventListener('click', () => {
+        const isDarkNow = document.body.classList.toggle('dark-theme');
+        themeToggle.innerText = isDarkNow ? "🌙" : "☀️";
+    });
+}
+
+// 🔐 Secure Authentication Overlay Layer Controls
 const userProfile = document.getElementById('userProfile'); const authOverlay = document.getElementById('authOverlay');
 if(userProfile && authOverlay) userProfile.addEventListener('click', () => { authOverlay.style.display = 'flex'; authMode = "signin"; document.getElementById('authTitle').innerText = "Welcome back"; document.getElementById('authName').style.display = "none"; });
 
