@@ -43,7 +43,9 @@ if (voiceToggle) {
     });
 }
 
-// 🎙️ WALKIETALKIE GUARD ENGINE
+// ====================================================================
+// 🎙️ WALKIETALKIE GUARD ENGINE (ABSOLUTE 0% AUTOSTART SURFACE)
+// ====================================================================
 let isWalkieTalkieActive = false;
 let speechRecognitionAgent = null;
 
@@ -116,7 +118,9 @@ window.switchGenerationMode = function(targetMode) {
     }
 };
 
+// ==========================================
 // 🗂️ Sidebar LocalDB Modules
+// ==========================================
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
 const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
@@ -174,14 +178,24 @@ if (newChatBtn) {
 if (footerUserLabel) footerUserLabel.innerText = currentUserName;
 loadCloudChatHistory();
 
-// 🎥 FILE & MASSIVE VIDEO LOADER INTEGRATION
+// ==========================================
+// 🎥 FIXED FRONTEND SIZE GUARD INTEGRATION
+// ==========================================
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
         const file = e.target.files[0]; if (!file) return;
         const targetType = this.getAttribute('data-target-type');
         
-        document.getElementById('previewName').textContent = `⏳ Processing massive file...`;
+        // Vercel 4.5MB Serverless Payload Barrier Rule
+        const maxLimitBytes = 4.5 * 1024 * 1024; 
+        if (file.size > maxLimitBytes && targetType === "video") {
+            alert(`⚠️ File Size Limit: Vercel server limits ke hisab se video size 4.5MB se choti honi chahiye. Aapki file ${(file.size / (1024 * 1024)).toFixed(2)}MB ki hai. Kripya choti video use karein.`);
+            this.value = "";
+            return;
+        }
+
+        document.getElementById('previewName').textContent = `⏳ Processing file chunk...`;
         document.getElementById('previewContainer').style.display = 'flex';
         
         const reader = new FileReader();
@@ -190,7 +204,7 @@ if (masterFileInput) {
             if (targetType === 'image') {
                 imageBase64 = rawBase64;
             } else {
-                uploadedFileData = rawBase64; // Handles massive MB base64 seamlessly
+                uploadedFileData = rawBase64; 
             }
             uploadedFileName = file.name; 
             uploadedFileType = targetType;
@@ -201,7 +215,7 @@ if (masterFileInput) {
 }
 document.getElementById('cancelPreview').addEventListener('click', () => { imageBase64 = null; uploadedFileData = null; uploadedFileName = null; uploadedFileType = null; document.getElementById('previewContainer').style.display = 'none'; });
 
-// Messages Matrix Pipeline
+// Central Messages Pipeline
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
 const chatContainer = document.getElementById('chat');
@@ -219,7 +233,7 @@ async function sendMessage(text) {
     lastUserPrompt = text;
     const mode = activeGenerationMode; 
     const ratio = document.getElementById("aspectRatio") ? document.getElementById("aspectRatio").value : "16:9";
-    const displayPrompt = text || `Analyzed Uploaded ${uploadedFileType || 'Asset'} Block: ${uploadedFileName || ''}`;
+    const displayPrompt = text || `Analyzed Uploaded File Block`;
     
     appendMessage('user', displayPrompt, null, null, "user-" + Date.now());
     if(messageInput) messageInput.value = '';
@@ -230,6 +244,14 @@ async function sendMessage(text) {
 
     try {
         const response = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        
+        // Direct handling if server still sends standard text errors
+        if (!response.ok) {
+            removeLoading(loadingId);
+            appendMessage('ai', "⚠️ **Server Limit Exceeded**: Request payload bohot bada hai. Kripya choti clip ya compression use karein.");
+            return;
+        }
+
         const data = await response.json();
         removeLoading(loadingId);
 
@@ -247,7 +269,7 @@ async function sendMessage(text) {
         }
     } catch (error) {
         removeLoading(loadingId);
-        appendMessage('ai', `⚠️ Sync Error: ${error.message}`);
+        appendMessage('ai', `⚠️ Sync Error: Unable to complete data loop.`);
     }
 }
 
@@ -323,21 +345,8 @@ if (authOverlay) {
             }
         }
         if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
-            localStorage.setItem("novaUserEmail", "ayush@novamind.com"); localStorage.setItem("novaUserName", "Ayush Vercel");
-            currentUserEmail = "ayush@novamind.com"; currentUserName = "Ayush Vercel"; if(footerUserLabel) footerUserLabel.innerText = "Ayush Vercel"; authOverlay.style.display = 'none'; loadCloudChatHistory(); return;
-        }
-        if (e.target.id === 'authSubmitBtn') {
-            const email = document.getElementById('authUsername')?.value.trim(); const pass = document.getElementById('authPassword')?.value.trim(); const name = nameField?.value.trim() || "User Node";
-            if (!email || !pass) return alert("Fields missing.");
-            const db = getLocalMemoryDB();
-            if (authMode === "signup") {
-                if(!db.users) db.users = []; if (db.users.find(u => u.email === email)) return alert("User already active!");
-                db.users.push({ email, pass, name }); writeLocalMemoryDB(db); alert("Account deployed!"); authMode = "signup"; switchLink.click();
-            } else {
-                const check = db.users.find(u => u.email === email && u.pass === pass); if (!check) return alert("Wrong credentials.");
-                localStorage.setItem("novaUserEmail", check.email); localStorage.setItem("novaUserName", check.name);
-                currentUserEmail = check.email; currentUserName = check.name; if(footerUserLabel) footerUserLabel.innerText = check.name; authOverlay.style.display = 'none'; loadCloudChatHistory();
-            }
+            localStorage.setItem("novaUserEmail", "ayush@ayush.com"); localStorage.setItem("novaUserName", "Ayush Vercel");
+            currentUserEmail = "ayush@ayush.com"; currentUserName = "Ayush Vercel"; if(footerUserLabel) footerUserLabel.innerText = "Ayush Vercel"; authOverlay.style.display = 'none'; loadCloudChatHistory(); return;
         }
     });
 }
