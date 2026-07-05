@@ -54,7 +54,7 @@
 
         <div id="chat" class="chat">
             <div class="message ai" id="msg-welcome-init">
-                <div class="msg-text">Workspace Active. Large file chunking and student-friendly explanation protocols are active.</div>
+                <div class="msg-text">Workspace Engine Connected. Ready for simple explanation mode and high volume video upload. 👍</div>
             </div>
         </div>
 
@@ -83,8 +83,8 @@
 
 <div id="authOverlay" class="auth-page-overlay" style="display:none;">
     <div class="auth-card">
-        <h2 id="authTitle">Welcome to NovaMind</h2>
-        <p id="authSubtitle" style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Sign in parameters</p>
+        <h2 id="authTitle">Welcome back</h2>
+        <p id="authSubtitle" style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Provide credentials to access cloud storage</p>
         <button id="googleAuthBtn" class="auth-btn google-btn">Continue with Google</button>
         <div class="auth-divider"><span>OR</span></div>
         <div class="auth-form-group">
@@ -93,7 +93,11 @@
             <input type="password" id="authPassword" placeholder="Password">
         </div>
         <button id="authSubmitBtn" class="auth-btn primary-submit-btn">Continue</button>
-        <button id="authCloseBtn" class="auth-btn cancel-btn">Back</button>
+        <div style="margin-top: 16px; text-align: center; font-size: 13px;">
+            <span id="authSwitchPrompt" style="color: #94a3b8;">Don't have an account?</span>
+            <a href="#" id="authSwitchModeBtn" style="color: #6366f1; text-decoration: none; font-weight: 600; margin-left: 4px;">Sign up</a>
+        </div>
+        <button id="authCloseBtn" class="auth-btn cancel-btn" style="margin-top: 12px;">Cancel</button>
     </div>
 </div>
 

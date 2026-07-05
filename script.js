@@ -1,5 +1,5 @@
 // ====================================================================
-// NovaMind AI V4 - Premium Stable Core Script Engine (Auto Database Integrated)
+// NovaMind AI V4 - Premium Stable Core Script Engine (Zero Glitch Control)
 // ====================================================================
 
 let imageBase64 = null;
@@ -7,21 +7,10 @@ let uploadedFileData = null;
 let uploadedFileName = null;
 let uploadedFileType = null;
 let isVoiceReplyEnabled = false;
-let authMode = "signin"; // Fixed the undefined authMode bug completely here
+let authMode = "signin"; 
 
-// Cloud Session Active Parameters Cache
 let currentUserEmail = localStorage.getItem("novaUserEmail") || null;
 let currentUserName = localStorage.getItem("novaUserName") || null;
-
-function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
-let userSessionToken = localStorage.getItem("novaSessionToken") || generateUUID();
-localStorage.setItem("novaSessionToken", userSessionToken);
 
 function speakText(text) {
     if (!window.speechSynthesis) return;
@@ -39,9 +28,7 @@ if (voiceToggle) {
     });
 }
 
-// ==========================================
-// 🗂️ Sidebar Control Actions
-// ==========================================
+// Sidebar Setup
 const sidebar = document.getElementById('sidebar');
 const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
 const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
@@ -58,53 +45,54 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// 💾 Cloud History Loader Function
-async function loadCloudChatHistory() {
-    if (!currentUserEmail || !chatHistoryList) return;
-    try {
-        const res = await fetch("/api/chat?action=getHistory", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: currentUserEmail })
-        });
-        const data = await res.json();
-        if (data.success && data.history) {
-            chatHistoryList.innerHTML = "";
-            data.history.forEach(log => {
-                const btn = document.createElement('button');
-                btn.className = "history-item-node";
-                btn.innerText = `💬 ${log.title}`;
-                btn.title = log.title;
-                btn.addEventListener('click', () => {
-                    document.getElementById('chat').innerHTML = `
-                        <div class="message user"><div class="msg-text">${log.prompt}</div></div>
-                        <div class="message ai"><div class="msg-text">${log.response}</div></div>`;
-                    sidebar.classList.remove('active');
-                });
-                chatHistoryList.appendChild(btn);
-            });
-        }
-    } catch(e) {
-        console.log("Cloud server history log sync error framework mapping failure.");
+// High Stability Memory Vault Engine
+function getLocalMemoryDB() {
+    let db = localStorage.getItem("nova_memory_vault");
+    if (!db) {
+        db = JSON.stringify({ users: [], chats: [] });
+        localStorage.setItem("nova_memory_vault", db);
     }
+    return JSON.parse(db);
+}
+
+function writeLocalMemoryDB(data) {
+    localStorage.setItem("nova_memory_vault", JSON.stringify(data));
+}
+
+function loadCloudChatHistory() {
+    if (!currentUserEmail || !chatHistoryList) return;
+    const db = getLocalMemoryDB();
+    const history = db.chats.filter(c => c.userEmail === currentUserEmail).slice(-15).reverse();
+    
+    chatHistoryList.innerHTML = "";
+    history.forEach(log => {
+        const btn = document.createElement('button');
+        btn.className = "history-item-node";
+        btn.innerText = `💬 ${log.title}`;
+        btn.title = log.title;
+        btn.addEventListener('click', () => {
+            document.getElementById('chat').innerHTML = `
+                <div class="message user"><div class="msg-text">${log.prompt}</div></div>
+                <div class="message ai"><div class="msg-text">${log.response}</div></div>`;
+            sidebar.classList.remove('active');
+        });
+        chatHistoryList.appendChild(btn);
+    });
 }
 
 if(newChatBtn) {
     newChatBtn.addEventListener('click', () => {
-        document.getElementById('chat').innerHTML = `<div class="message ai"><div class="msg-text">Refresh cloud session started. Thread updated.</div></div>`;
+        document.getElementById('chat').innerHTML = `<div class="message ai"><div class="msg-text">New operational layer started.</div></div>`;
         sidebar.classList.remove('active');
     });
 }
 
-// Global Sync Check on Page Startup
 if (currentUserName && footerUserLabel) {
     footerUserLabel.innerText = currentUserName;
     loadCloudChatHistory();
 }
 
-// ==========================================
-// Unified Input Handler (Large File Stream Fix)
-// ==========================================
+// File Attachment Handler
 const masterFileInput = document.getElementById('masterFileInput');
 if (masterFileInput) {
     masterFileInput.addEventListener('change', function(e) {
@@ -138,9 +126,7 @@ function clearPreview() {
     if(masterFileInput) masterFileInput.value = '';
 }
 
-// ==========================================
-// Core Messaging Pipeline Gateway
-// ==========================================
+// Messaging Core Hub
 const sendBtn = document.getElementById('send');
 const messageInput = document.getElementById('message');
 const chatContainer = document.getElementById('chat');
@@ -159,7 +145,7 @@ async function sendMessage(text) {
     const mode = (typeof activeGenerationMode !== "undefined") ? activeGenerationMode : "chat";
     const ratio = document.getElementById("aspectRatio") ? document.getElementById("aspectRatio").value : "16:9";
 
-    appendMessage('user', text || `Uploaded Document Stream Asset [${uploadedFileName}]`);
+    appendMessage('user', text || `Uploaded File asset: [${uploadedFileName}]`);
     if(messageInput) messageInput.value = '';
     
     const loadingId = appendLoading();
@@ -167,7 +153,7 @@ async function sendMessage(text) {
     const payload = {
         message: text, generationMode: mode, aspectRatio: ratio,
         image: imageBase64, fileData: uploadedFileData, fileName: uploadedFileName, 
-        fileType: uploadedFileType, userEmail: currentUserEmail
+        fileType: uploadedFileType
     };
     clearPreview();
 
@@ -184,13 +170,17 @@ async function sendMessage(text) {
             appendMessage('ai', data.reply || "", data.mediaUrl, data.mediaType);
             if (isVoiceReplyEnabled && data.reply) speakText(data.reply);
             
-            if (mode === "chat" && currentUserEmail) {
-                setTimeout(() => { loadCloudChatHistory(); }, 900);
+            if (mode === "chat" && currentUserEmail && text && data.reply) {
+                const db = getLocalMemoryDB();
+                const logTitle = text.length > 20 ? text.substring(0, 20) + "..." : text;
+                db.chats.push({ userEmail: currentUserEmail, title: logTitle, prompt: text, response: data.reply });
+                writeLocalMemoryDB(db);
+                loadCloudChatHistory();
             }
         }
     } catch (error) {
         removeLoading(loadingId);
-        appendMessage('ai', `⚠️ Network Synchronization Interrupted: ${error.message}`);
+        appendMessage('ai', `⚠️ Connection Log Sync Interrupted: ${error.message}`);
     }
 }
 
@@ -237,7 +227,7 @@ function appendLoading() {
     const id = 'load-' + Date.now();
     const div = document.createElement('div');
     div.className = 'message ai'; div.id = id;
-    div.innerHTML = `<div class="msg-text">Analyzing query data inputs and building student response... ⏳</div>`;
+    div.innerHTML = `<div class="msg-text">Analyzing file element and preparing simple answer... ⏳</div>`;
     chatContainer.appendChild(div);
     chatContainer.scrollTop = chatContainer.scrollHeight;
     return id;
@@ -248,9 +238,7 @@ window.speakText = speakText;
 window.triggerDelete = function(id) { document.getElementById(`msg-${id}`)?.remove(); };
 window.triggerRegenerate = function() { if (lastUserPrompt) sendMessage(lastUserPrompt); };
 
-// ==========================================
-// Menu Interface Toggles & Account Engine
-// ==========================================
+// UI Controls
 const attach = document.getElementById('attach');
 const attachMenu = document.getElementById('attachMenu');
 if(attach) attach.addEventListener('click', (e) => { e.stopPropagation(); attachMenu.classList.toggle('active'); });
@@ -263,9 +251,8 @@ if(themeToggle) {
         localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
     });
 }
-if (localStorage.getItem('theme') === 'light') document.body.classList.remove('dark-theme');
 
-// 👤 Account Overlay Toggle
+// 👤 Safe Cryptic Internal Authenticators Hub
 const userProfile = document.getElementById('userProfile');
 const authOverlay = document.getElementById('authOverlay');
 if(userProfile && authOverlay) userProfile.addEventListener('click', () => authOverlay.style.display = 'flex');
@@ -276,6 +263,8 @@ if (authOverlay) {
         const titleText = document.getElementById('authTitle');
         const subtitleText = document.getElementById('authSubtitle');
         const submitBtn = document.getElementById('authSubmitBtn');
+        const promptText = document.getElementById('authSwitchPrompt');
+        const switchLink = document.getElementById('authSwitchModeBtn');
 
         if (e.target.id === 'authCloseBtn') authOverlay.style.display = 'none';
 
@@ -283,23 +272,27 @@ if (authOverlay) {
             e.preventDefault();
             if (authMode === "signin") {
                 authMode = "signup";
-                titleText.innerText = "Create your account";
-                subtitleText.innerText = "Build secure credentials to access permanent database slots";
+                titleText.innerText = "Create account";
+                subtitleText.innerText = "Setup private local keys safely";
                 if(nameField) nameField.style.display = "block";
                 submitBtn.innerText = "Sign Up";
+                promptText.innerText = "Already registered?";
+                switchLink.innerText = "Log in";
             } else {
                 authMode = "signin";
                 titleText.innerText = "Welcome back";
-                subtitleText.innerText = "Provide email metrics to read active dashboard history configuration";
+                subtitleText.innerText = "Provide password parameters";
                 if(nameField) nameField.style.display = "none";
                 submitBtn.innerText = "Continue";
+                promptText.innerText = "Don't have an account?";
+                switchLink.innerText = "Sign up";
             }
         }
 
         if (e.target.id === 'googleAuthBtn' || e.target.closest('#googleAuthBtn')) {
-            localStorage.setItem("novaUserEmail", "ayush.google@novamind.com");
+            localStorage.setItem("novaUserEmail", "ayush@novamind.com");
             localStorage.setItem("novaUserName", "Ayush Vercel");
-            currentUserEmail = "ayush.google@novamind.com";
+            currentUserEmail = "ayush@novamind.com";
             currentUserName = "Ayush Vercel";
             if(footerUserLabel) footerUserLabel.innerText = "Ayush Vercel";
             authOverlay.style.display = 'none';
@@ -311,31 +304,26 @@ if (authOverlay) {
             const pass = document.getElementById('authPassword')?.value.trim();
             const name = nameField?.value.trim() || "User Node";
 
-            if (!email || !pass) return alert("All required fields must be populated.");
+            if (!email || !pass) return alert("Fields missing.");
             
-            const action = authMode === "signup" ? "signup" : "login";
-            
-            try {
-                const res = await fetch(`/api/chat?action=${action}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password: pass, name })
-                });
-                const data = await res.json();
-                
-                if (data.success) {
-                    localStorage.setItem("novaUserEmail", data.email);
-                    localStorage.setItem("novaUserName", data.name);
-                    currentUserEmail = data.email;
-                    currentUserName = data.name;
-                    if(footerUserLabel) footerUserLabel.innerText = data.name;
-                    authOverlay.style.display = 'none';
-                    loadCloudChatHistory();
-                } else {
-                    alert(data.msg || "Authentication failed.");
-                }
-            } catch(err) {
-                alert("Database server connection active.");
+            const db = getLocalMemoryDB();
+            if (authMode === "signup") {
+                const check = db.users.find(u => u.email === email);
+                if (check) return alert("User already active!");
+                db.users.push({ email, pass, name });
+                writeLocalMemoryDB(db);
+                alert("Account deployed! Please sign in.");
+                authMode = "signup"; switchLink.click();
+            } else {
+                const check = db.users.find(u => u.email === email && u.pass === pass);
+                if (!check) return alert("Wrong email or password.");
+                localStorage.setItem("novaUserEmail", check.email);
+                localStorage.setItem("novaUserName", check.name);
+                currentUserEmail = check.email;
+                currentUserName = check.name;
+                if(footerUserLabel) footerUserLabel.innerText = check.name;
+                authOverlay.style.display = 'none';
+                loadCloudChatHistory();
             }
         }
     });
