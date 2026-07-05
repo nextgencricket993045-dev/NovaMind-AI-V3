@@ -110,7 +110,7 @@ window.triggerManualWalkieTalkie = function(e) {
     }
 };
 
-// Global Tab Switcher Logic Restored
+// Global Tab Switcher Logic (Chat & Image Only)
 window.switchGenerationMode = function(targetMode) {
     activeGenerationMode = targetMode;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -138,6 +138,7 @@ const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
 const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
 const chatHistoryList = document.getElementById('chatHistoryList');
 const footerUserLabel = document.getElementById('footerUserLabel');
+const newChatBtn = document.getElementById('newChatBtn');
 
 if (sidebarOpenBtn) sidebarOpenBtn.addEventListener('click', (e) => { e.stopPropagation(); sidebar.classList.add('active'); });
 if (sidebarCloseBtn) sidebarCloseBtn.addEventListener('click', () => sidebar.classList.remove('active'));
@@ -166,8 +167,27 @@ function loadCloudChatHistory() {
             const chatBox = document.getElementById('chat');
             chatBox.innerHTML = `<div class="message user"><div class="msg-text">${log.prompt}</div></div><div class="message ai"><div class="msg-text">${log.response}</div></div>`;
             renderMathFormulasSafely(chatBox); sidebar.classList.remove('active');
+            if (typeof hljs !== 'undefined') chatBox.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
         });
         chatHistoryList.appendChild(btn);
+    });
+}
+
+// 👑 FIXED: Full Functional New Chat Reset Hook
+if (newChatBtn) {
+    newChatBtn.addEventListener('click', () => {
+        const chatContainer = document.getElementById('chat');
+        if (chatContainer) {
+            chatContainer.innerHTML = `<div class="message ai" id="msg-welcome-init"><div class="msg-text">Workspace Active. Chat and Image Studio is deployed successfully. 👍</div></div>`;
+        }
+        imageBase64 = null;
+        uploadedFileData = null;
+        const preview = document.getElementById('previewContainer');
+        if (preview) preview.style.display = 'none';
+        const msgInput = document.getElementById('message');
+        if (msgInput) msgInput.value = '';
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        if (sidebar) sidebar.classList.remove('active');
     });
 }
 
@@ -243,7 +263,7 @@ async function sendMessage(text) {
     }
 }
 
-// 🛠️ ALL CONTROLS FULLY RESTORED (Copy, Speak, Re-gen, Edit, Delete)
+// 🛠️ ALL ACTIONS ACTIVE (Copy, Speak, Re-gen, Edit, Delete)
 function appendMessage(sender, text, mediaUrl = null, mediaType = null, id = "") {
     const div = document.createElement('div'); div.className = `message ${sender}`; div.id = `msg-${id}`;
     let html = `<div class="msg-text">`;
