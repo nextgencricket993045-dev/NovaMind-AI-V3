@@ -6,8 +6,9 @@
     <title>NovaMind AI V4 - Premium Studio</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#212121">
-    <link rel="stylesheet" href="style.css?v=6.0">
+    <link rel="stylesheet" href="style.css?v=6.5">
     
+    <!-- Premium Math Auto Render Libraries (KaTeX) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
@@ -35,6 +36,13 @@
     </aside>
 
     <main class="main-content">
+        <!-- 💰 TOP LEADERBOARD AD BANNER -->
+        <div class="ad-banner-wrapper top-ad">
+            <div class="ad-placeholder-box">
+                <span>📢 Google Sponsored Advertisement Space</span>
+            </div>
+        </div>
+
         <header class="header">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <button class="sidebar-toggle-btn" id="sidebarOpenBtn">☰</button>
@@ -68,7 +76,7 @@
 
         <div id="chat" class="chat">
             <div class="message ai" id="msg-welcome-init">
-                <div class="msg-text">Workspace Active. Chat, Image and Video Matrix Analytics Studio is deployed successfully. 👍</div>
+                <div class="msg-text">Workspace Active. Monetization modules placeholder initialized successfully. 👍</div>
             </div>
         </div>
 
@@ -91,6 +99,13 @@
             <button id="attach" class="circle-btn">➕</button>
             <input type="text" id="message" placeholder="Ask NovaMind AI..." autocomplete="off">
             <button id="send" class="circle-btn">➤</button>
+        </div>
+
+        <!-- 💰 BOTTOM SMART REWARD BANNER AD -->
+        <div class="ad-banner-wrapper bottom-ad">
+            <div class="ad-placeholder-box">
+                <span>🚀 Support Us - Ads Powered by Google AdMob</span>
+            </div>
         </div>
     </main>
 </div>
@@ -115,7 +130,7 @@
     </div>
 </div>
 
-<script src="script.js?v=6.0"></script>
+<script src="script.js?v=6.5"></script>
 <script>
     let triggerFileSelect = (type) => {
         const input = document.getElementById('masterFileInput');
